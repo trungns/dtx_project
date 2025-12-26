@@ -9,10 +9,9 @@
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
 
-            <!-- Add DTX Type field after Product Type -->
-            <xpath expr="//field[@name='type']" position="after">
-                <field name="x_dtx_type"
-                       options="{'no_create': True, 'no_open': True}"/>
+            <!-- Add DTX Type field after Category -->
+            <xpath expr="//field[@name='categ_id']" position="after">
+                <field name="x_dtx_type"/>
             </xpath>
 
             <!-- Add DTX fields in General Information tab -->
@@ -83,7 +82,7 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_tree_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='type']" position="after">
+            <xpath expr="//field[@name='detailed_type']" position="after">
                 <field name="x_dtx_type" optional="show"/>
             </xpath>
         </field>
