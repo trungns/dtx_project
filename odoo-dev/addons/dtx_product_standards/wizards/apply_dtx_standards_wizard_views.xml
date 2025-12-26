@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         WIZARD: APPLY DTX STANDARDS
+         ========================================== -->
+    <record id="view_apply_dtx_standards_wizard_form" model="ir.ui.view">
+        <field name="name">dtx.apply.standards.wizard.form</field>
+        <field name="model">dtx.apply.standards.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Áp dụng chuẩn DTX">
+                <header>
+                    <button name="action_apply_standards"
+                            string="Áp dụng"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button name="action_close"
+                            string="Đóng"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+
+                <sheet>
+                    <group attrs="{'invisible': [('state', '=', 'done')]}">
+                        <group string="Tùy chọn áp dụng">
+                            <field name="apply_tracking"/>
+                            <field name="apply_purchase_sale"/>
+                        </group>
+
+                        <group string="Sản phẩm áp dụng">
+                            <field name="product_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="Để trống = áp dụng cho TẤT CẢ sản phẩm có loại DTX"/>
+                        </group>
+                    </group>
+
+                    <group attrs="{'invisible': [('state', '=', 'done')]}">
+                        <group colspan="2">
+                            <div class="alert alert-info" role="alert">
+                                <h4>Hướng dẫn sử dụng Wizard</h4>
+
+                                <p><strong>Bước 1:</strong> Chọn tùy chọn muốn áp dụng</p>
+                                <ul>
+                                    <li><strong>Áp dụng quản lý Serial:</strong> Tự động bật/tắt serial tracking
+                                        <ul>
+                                            <li>Thiết bị Serial → BẬT serial tracking</li>
+                                            <li>Linh kiện → TẮT serial tracking</li>
+                                            <li>Dịch vụ → Chuyển type thành "Service"</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Áp dụng cấu hình mua/bán:</strong>
+                                        <ul>
+                                            <li>Thiết bị/Linh kiện/Kiosk → Cho phép MUA</li>
+                                            <li>Thiết bị/Kiosk/Dịch vụ → Cho phép BÁN</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+
+                                <p><strong>Bước 2:</strong> Chọn sản phẩm (hoặc để trống)</p>
+                                <ul>
+                                    <li>Nếu chọn từ danh sách sản phẩm (checkbox) → chỉ áp dụng cho sản phẩm đã chọn</li>
+                                    <li>Nếu để trống → áp dụng cho TẤT CẢ sản phẩm có "Loại sản phẩm DTX"</li>
+                                </ul>
+
+                                <p><strong>Lưu ý:</strong></p>
+                                <ul>
+                                    <li>⚠️ KHÔNG thể thay đổi tracking nếu sản phẩm đã có giao dịch kho</li>
+                                    <li>✓ Wizard sẽ BỎ QUA các sản phẩm không thể thay đổi</li>
+                                    <li>✓ Xem kết quả chi tiết sau khi áp dụng</li>
+                                </ul>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!-- Results (shown after execution) -->
+                    <group attrs="{'invisible': [('state', '!=', 'done')]}">
+                        <group string="Thống kê" colspan="2">
+                            <field name="total_products" readonly="1"/>
+                            <field name="updated_count" readonly="1"/>
+                            <field name="skipped_count" readonly="1"/>
+                        </group>
+
+                        <group string="Chi tiết" colspan="2">
+                            <field name="summary_message" nolabel="1"
+                                   widget="text"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         ACTION: LAUNCH WIZARD
+         ========================================== -->
+    <record id="action_apply_dtx_standards_wizard" model="ir.actions.act_window">
+        <field name="name">Áp dụng chuẩn DTX</field>
+        <field name="res_model">dtx.apply.standards.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="binding_view_types">list</field>
+    </record>
+
+</odoo>

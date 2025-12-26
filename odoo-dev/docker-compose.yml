@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: dtx_postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  # Odoo 16 Community
+  odoo:
+    image: odoo:16
+    container_name: dtx_odoo16
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      # Custom addons (your modules)
+      - ./addons:/mnt/extra-addons
+      # Odoo data (filestore, sessions)
+      - odoo_data:/var/lib/odoo
+      # Config file
+      - ./config:/etc/odoo
+    command: --dev=all --log-level=debug
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  odoo_data:

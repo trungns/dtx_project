@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dtx_apply_standards_wizard_manager,dtx.apply.standards.wizard.manager,model_dtx_apply_standards_wizard,stock.group_stock_manager,1,1,1,1
+access_dtx_apply_standards_wizard_user,dtx.apply.standards.wizard.user,model_dtx_apply_standards_wizard,stock.group_stock_user,1,0,0,0
+access_dtx_bom_template_manager,dtx.bom.template.manager,model_dtx_bom_template,mrp.group_mrp_manager,1,1,1,1
+access_dtx_bom_template_user,dtx.bom.template.user,model_dtx_bom_template,mrp.group_mrp_user,1,1,1,0
+access_dtx_bom_template_line_manager,dtx.bom.template.line.manager,model_dtx_bom_template_line,mrp.group_mrp_manager,1,1,1,1
+access_dtx_bom_template_line_user,dtx.bom.template.line.user,model_dtx_bom_template_line,mrp.group_mrp_user,1,1,1,0
+access_dtx_bom_generate_wizard_manager,dtx.bom.generate.wizard.manager,model_dtx_bom_generate_wizard,mrp.group_mrp_manager,1,1,1,1
+access_dtx_bom_generate_wizard_user,dtx.bom.generate.wizard.user,model_dtx_bom_generate_wizard,mrp.group_mrp_user,1,1,1,0

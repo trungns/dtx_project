@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         PRODUCT TEMPLATE - FORM VIEW EXTENSION
+         ========================================== -->
+    <record id="view_product_template_form_dtx_standards" model="ir.ui.view">
+        <field name="name">product.template.form.dtx.standards</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Add DTX Type field after Product Type -->
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="x_dtx_type"
+                       options="{'no_create': True, 'no_open': True}"/>
+            </xpath>
+
+            <!-- Add DTX fields in General Information tab -->
+            <xpath expr="//group[@name='group_general']" position="inside">
+                <group string="DTX - Chuẩn hóa sản phẩm" name="dtx_standards_group">
+                    <field name="x_dtx_requires_vendor_bill"/>
+                    <field name="x_dtx_notes" placeholder="Ghi chú đặc điểm, yêu cầu đặc biệt..."/>
+                </group>
+            </xpath>
+
+            <!-- Add DTX Checklist Tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="DTX – Kiểm tra nhanh" name="dtx_checklist">
+                    <group name="dtx_checklist_main">
+                        <group string="Cấu hình sản phẩm" name="dtx_checklist_config">
+                            <field name="x_dtx_check_serial_enabled"
+                                   widget="boolean_toggle"
+                                   readonly="1"/>
+                            <field name="x_dtx_check_avco_costing"
+                                   widget="boolean_toggle"
+                                   readonly="1"/>
+                            <field name="x_dtx_check_has_bom"
+                                   widget="boolean_toggle"
+                                   readonly="1"
+                                   attrs="{'invisible': [('x_dtx_type', '!=', 'finished_kiosk')]}"/>
+                        </group>
+
+                        <group string="Quyền mua/bán" name="dtx_checklist_permissions">
+                            <field name="x_dtx_check_can_purchase"
+                                   widget="boolean_toggle"
+                                   readonly="1"/>
+                            <field name="x_dtx_check_can_sell"
+                                   widget="boolean_toggle"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group name="dtx_checklist_help">
+                        <group string="Hướng dẫn" colspan="2">
+                            <div class="alert alert-info" role="alert">
+                                <h4>Tab này CHỈ để kiểm tra - KHÔNG ép buộc</h4>
+                                <p>
+                                    Các ô tích xanh (✓) cho biết sản phẩm đã được cấu hình đúng chuẩn DTX.
+                                </p>
+                                <ul>
+                                    <li><strong>Thiết bị quản lý theo Serial:</strong> Nên bật Serial tracking + AVCO</li>
+                                    <li><strong>Linh kiện:</strong> Không cần Serial, chỉ cần AVCO</li>
+                                    <li><strong>Kiosk:</strong> Cần có BOM để sản xuất/lắp ráp</li>
+                                    <li><strong>Dịch vụ:</strong> Không quản lý kho</li>
+                                </ul>
+                                <p>
+                                    <strong>Dùng Wizard "Áp dụng chuẩn DTX"</strong> để cấu hình hàng loạt sản phẩm.
+                                </p>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ==========================================
+         PRODUCT TEMPLATE - TREE VIEW EXTENSION
+         ========================================== -->
+    <record id="view_product_template_tree_dtx_standards" model="ir.ui.view">
+        <field name="name">product.template.tree.dtx.standards</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="x_dtx_type" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         PRODUCT TEMPLATE - SEARCH VIEW EXTENSION
+         ========================================== -->
+    <record id="view_product_template_search_dtx_standards" model="ir.ui.view">
+        <field name="name">product.template.search.dtx.standards</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Add DTX Type to search fields -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="x_dtx_type" string="Loại DTX"/>
+            </xpath>
+
+            <!-- Add filters -->
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Thiết bị Serial" name="filter_device_serialized"
+                        domain="[('x_dtx_type', '=', 'device_serialized')]"/>
+                <filter string="Linh kiện" name="filter_component"
+                        domain="[('x_dtx_type', '=', 'component_untracked')]"/>
+                <filter string="Kiosk" name="filter_kiosk"
+                        domain="[('x_dtx_type', '=', 'finished_kiosk')]"/>
+                <filter string="Dịch vụ" name="filter_service"
+                        domain="[('x_dtx_type', '=', 'service')]"/>
+                <separator/>
+                <filter string="Yêu cầu hóa đơn đầu vào" name="filter_requires_bill"
+                        domain="[('x_dtx_requires_vendor_bill', '=', True)]"/>
+
+                <!-- Add group by -->
+                <group expand="0" string="Group By">
+                    <filter string="Loại sản phẩm DTX" name="group_dtx_type"
+                            context="{'group_by': 'x_dtx_type'}"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ==========================================
+         MENU: DTX PRODUCTS
+         ========================================== -->
+    <record id="action_product_template_dtx" model="ir.actions.act_window">
+        <field name="name">Sản phẩm DTX</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{
+            'search_default_filter_device_serialized': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tạo sản phẩm DTX đầu tiên
+            </p>
+            <p>
+                Phân loại sản phẩm theo chuẩn DTX để dễ quản lý:
+                <ul>
+                    <li>Thiết bị quản lý theo Serial</li>
+                    <li>Linh kiện / vật tư tiêu hao</li>
+                    <li>Kiosk / Thiết bị hoàn chỉnh</li>
+                    <li>Dịch vụ</li>
+                </ul>
+            </p>
+        </field>
+    </record>
+
+    <!-- Add menu under Inventory -->
+    <menuitem id="menu_dtx_product_standards"
+              name="DTX – Chuẩn hóa dữ liệu"
+              parent="stock.menu_stock_root"
+              sequence="100"/>
+
+    <menuitem id="menu_product_dtx"
+              name="Sản phẩm DTX"
+              parent="menu_dtx_product_standards"
+              action="action_product_template_dtx"
+              sequence="10"/>
+
+</odoo>

@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Odoo
+*.pyc
+*.pyo
+.~lock.*
+*.swp
+.*.swp
+*.log
+*.pot
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+.qodo/
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+*~
+
+# Claude
+.claude/
+
+# Odoo filestore & sessions (không commit vào git)
+odoo-dev/filestore/
+odoo-dev/sessions/
+odoo-dev/addons/web/
+odoo-dev/addons/base/
+
+# Docker volumes data (không commit)
+odoo-dev/postgres-data/
+
+# Environment & secrets
+.env
+*.secret
+credentials.json
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

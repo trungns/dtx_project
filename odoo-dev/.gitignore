@@ -1,0 +1,34 @@
+# Odoo Development Environment - Git Ignore
+
+# Data folders (auto-generated)
+data/
+odoo_data/
+db_data/
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Mac
+.DS_Store
+
+# Backup files
+*.sql
+backup_*.sql
+
+# Temporary files
+*.tmp
+*.bak

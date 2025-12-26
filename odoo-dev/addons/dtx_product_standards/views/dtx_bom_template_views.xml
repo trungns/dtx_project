@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         DTX BOM TEMPLATE - FORM VIEW
+         ========================================== -->
+    <record id="view_dtx_bom_template_form" model="ir.ui.view">
+        <field name="name">dtx.bom.template.form</field>
+        <field name="model">dtx.bom.template</field>
+        <field name="arch" type="xml">
+            <form string="Mẫu BOM Kiosk">
+                <header>
+                    <button name="action_generate_bom"
+                            string="Tạo BOM"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('bom_exists', '=', True)]}"/>
+                    <button name="action_generate_bom"
+                            string="Cập nhật BOM"
+                            type="object"
+                            class="btn-warning"
+                            attrs="{'invisible': [('bom_exists', '=', False)]}"/>
+                    <button name="action_view_bom"
+                            string="Xem BOM"
+                            type="object"
+                            class="btn-secondary"
+                            attrs="{'invisible': [('bom_exists', '=', False)]}"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_bom"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cogs"
+                                attrs="{'invisible': [('bom_exists', '=', False)]}">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">BOM</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="BOM đã tạo" bg_color="bg-success"
+                            attrs="{'invisible': [('bom_exists', '=', False)]}"/>
+
+                    <group>
+                        <group string="Thông tin cơ bản">
+                            <field name="name" placeholder="VD: BOM Kiosk Model A"/>
+                            <field name="finished_product_tmpl_id"
+                                   options="{'no_create': True}"
+                                   context="{'default_x_dtx_type': 'finished_kiosk'}"/>
+                            <field name="total_components" readonly="1"/>
+                        </group>
+
+                        <group string="Gia công thuê ngoài (Optional)">
+                            <field name="subcontractor_id"
+                                   options="{'no_create': True}"
+                                   placeholder="Để trống nếu sản xuất nội bộ"/>
+                            <field name="bom_exists" invisible="1"/>
+                            <field name="bom_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Ghi chú">
+                        <field name="notes" nolabel="1"
+                               placeholder="Ghi chú về quy trình lắp ráp, yêu cầu đặc biệt, v.v."/>
+                    </group>
+
+                    <notebook>
+                        <page string="Linh kiện" name="components">
+                            <field name="component_line_ids">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="component_product_id"
+                                           options="{'no_create': True}"
+                                           context="{'default_type': 'product'}"/>
+                                    <field name="quantity"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="notes" placeholder="Ghi chú..."/>
+                                </tree>
+                            </field>
+
+                            <group>
+                                <div class="alert alert-info" role="alert">
+                                    <h4>Hướng dẫn thêm linh kiện</h4>
+                                    <p><strong>Bước 1:</strong> Click "Add a line" để thêm linh kiện</p>
+                                    <p><strong>Bước 2:</strong> Chọn linh kiện từ danh sách (Touch screen, Mini PC, Máy in, v.v.)</p>
+                                    <p><strong>Bước 3:</strong> Nhập số lượng cần thiết cho 1 Kiosk</p>
+                                    <p><strong>Lưu ý:</strong></p>
+                                    <ul>
+                                        <li>Số lượng = Số linh kiện cần cho 1 Kiosk hoàn chỉnh</li>
+                                        <li>VD: Nếu 1 Kiosk cần 2 USB cable → Số lượng = 2</li>
+                                        <li>Kéo thả dòng để sắp xếp thứ tự</li>
+                                    </ul>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         DTX BOM TEMPLATE - TREE VIEW
+         ========================================== -->
+    <record id="view_dtx_bom_template_tree" model="ir.ui.view">
+        <field name="name">dtx.bom.template.tree</field>
+        <field name="model">dtx.bom.template</field>
+        <field name="arch" type="xml">
+            <tree string="Mẫu BOM Kiosk">
+                <field name="name"/>
+                <field name="finished_product_tmpl_id"/>
+                <field name="total_components"/>
+                <field name="subcontractor_id" optional="hide"/>
+                <field name="bom_exists" widget="boolean_toggle" readonly="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         DTX BOM TEMPLATE - SEARCH VIEW
+         ========================================== -->
+    <record id="view_dtx_bom_template_search" model="ir.ui.view">
+        <field name="name">dtx.bom.template.search</field>
+        <field name="model">dtx.bom.template</field>
+        <field name="arch" type="xml">
+            <search string="Mẫu BOM Kiosk">
+                <field name="name" string="Tên mẫu BOM"/>
+                <field name="finished_product_tmpl_id" string="Sản phẩm Kiosk"/>
+                <field name="subcontractor_id" string="Đối tác gia công"/>
+
+                <filter string="BOM đã tạo" name="filter_bom_exists"
+                        domain="[('bom_id', '!=', False)]"/>
+                <filter string="BOM chưa tạo" name="filter_bom_not_exists"
+                        domain="[('bom_id', '=', False)]"/>
+
+                <separator/>
+                <filter string="Có gia công thuê ngoài" name="filter_subcontracted"
+                        domain="[('subcontractor_id', '!=', False)]"/>
+                <filter string="Sản xuất nội bộ" name="filter_internal"
+                        domain="[('subcontractor_id', '=', False)]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Sản phẩm Kiosk" name="group_product"
+                            context="{'group_by': 'finished_product_tmpl_id'}"/>
+                    <filter string="Đối tác gia công" name="group_subcontractor"
+                            context="{'group_by': 'subcontractor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         ACTION: DTX BOM TEMPLATES
+         ========================================== -->
+    <record id="action_dtx_bom_template" model="ir.actions.act_window">
+        <field name="name">Mẫu BOM Kiosk</field>
+        <field name="res_model">dtx.bom.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tạo mẫu BOM đầu tiên cho Kiosk
+            </p>
+            <p>
+                BOM Template giúp bạn:
+                <ul>
+                    <li>Quản lý danh sách linh kiện cho từng loại Kiosk</li>
+                    <li>Tạo BOM thực tế trong Manufacturing dễ dàng</li>
+                    <li>Chuẩn bị cho sản xuất nội bộ hoặc gia công thuê ngoài</li>
+                </ul>
+            </p>
+        </field>
+    </record>
+
+    <!-- Add menu item -->
+    <menuitem id="menu_dtx_bom_template"
+              name="Mẫu BOM Kiosk"
+              parent="menu_dtx_product_standards"
+              action="action_dtx_bom_template"
+              sequence="20"/>
+
+</odoo>

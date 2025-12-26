@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         WIZARD: GENERATE BOM FROM TEMPLATE
+         ========================================== -->
+    <record id="view_dtx_bom_generate_wizard_form" model="ir.ui.view">
+        <field name="name">dtx.bom.generate.wizard.form</field>
+        <field name="model">dtx.bom.generate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Tạo / Cập nhật BOM">
+                <header>
+                    <button name="action_generate_bom"
+                            string="Xác nhận tạo BOM"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '=', 'done')]}"/>
+                    <button name="action_view_bom"
+                            string="Xem BOM"
+                            type="object"
+                            class="btn-primary"
+                            attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                    <button name="action_close"
+                            string="Đóng"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+
+                <sheet>
+                    <!-- Confirmation screen -->
+                    <group attrs="{'invisible': [('state', '=', 'done')]}">
+                        <group string="BOM Template">
+                            <field name="template_id" readonly="1"/>
+                            <field name="finished_product_tmpl_id" readonly="1"/>
+                            <field name="component_count" readonly="1"/>
+                        </group>
+
+                        <group string="Gia công">
+                            <field name="subcontractor_id" readonly="1"/>
+                        </group>
+
+                        <group string="Trạng thái" colspan="2">
+                            <field name="mode" readonly="1" widget="badge"
+                                   decoration-success="mode == 'create'"
+                                   decoration-warning="mode == 'update'"/>
+                            <field name="bom_exists" invisible="1"/>
+                            <field name="existing_bom_id" readonly="1"
+                                   attrs="{'invisible': [('bom_exists', '=', False)]}"/>
+                        </group>
+                    </group>
+
+                    <group attrs="{'invisible': [('state', '=', 'done')]}">
+                        <group colspan="2">
+                            <div class="alert alert-warning" role="alert"
+                                 attrs="{'invisible': [('mode', '!=', 'update')]}">
+                                <h4>⚠️ Cảnh báo</h4>
+                                <p>
+                                    <strong>BOM đã tồn tại cho sản phẩm này!</strong>
+                                </p>
+                                <p>
+                                    Khi click "Xác nhận tạo BOM":
+                                </p>
+                                <ul>
+                                    <li>BOM hiện tại sẽ được CẬP NHẬT (không tạo mới)</li>
+                                    <li>Tất cả dòng linh kiện cũ sẽ bị XÓA</li>
+                                    <li>Dòng linh kiện mới từ template sẽ được thêm vào</li>
+                                </ul>
+                            </div>
+
+                            <div class="alert alert-info" role="alert"
+                                 attrs="{'invisible': [('mode', '!=', 'create')]}">
+                                <h4>ℹ️ Thông tin</h4>
+                                <p>
+                                    <strong>BOM mới sẽ được tạo</strong>
+                                </p>
+                                <p>
+                                    Sau khi tạo BOM, bạn có thể:
+                                </p>
+                                <ul>
+                                    <li>Tạo Manufacturing Order (MO) để sản xuất Kiosk</li>
+                                    <li>Odoo tự động trừ linh kiện ra khỏi kho khi sản xuất</li>
+                                    <li>Sản phẩm Kiosk hoàn chỉnh sẽ vào kho sau khi MO hoàn tất</li>
+                                </ul>
+                            </div>
+
+                            <div class="alert alert-success" role="alert"
+                                 attrs="{'invisible': [('subcontractor_id', '=', False)]}">
+                                <h4>🏭 Gia công thuê ngoài</h4>
+                                <p>
+                                    <strong>BOM sẽ được cấu hình cho subcontracting</strong>
+                                </p>
+                                <p>
+                                    Đối tác gia công: <field name="subcontractor_id" readonly="1" nolabel="1" class="font-weight-bold"/>
+                                </p>
+                                <p>
+                                    Quy trình:
+                                </p>
+                                <ul>
+                                    <li>Tạo Purchase Order với đối tác gia công</li>
+                                    <li>Gửi linh kiện cho đối tác (Odoo tự động tính)</li>
+                                    <li>Nhận Kiosk hoàn chỉnh về kho</li>
+                                </ul>
+                            </div>
+                        </group>
+                    </group>
+
+                    <!-- Result screen -->
+                    <group attrs="{'invisible': [('state', '!=', 'done')]}">
+                        <group string="Kết quả" colspan="2">
+                            <field name="created_bom_id" readonly="1"/>
+                            <field name="result_message" nolabel="1"
+                                   widget="text"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>
