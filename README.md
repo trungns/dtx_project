@@ -1,256 +1,180 @@
-# DTX Odoo Project
+# DTX Odoo 16 - Queue Management System
 
-Enterprise Resource Planning system for DTX Smart Queue Management Systems
+Hệ thống quản lý hàng đợi thông minh cho DTX trên nền tảng Odoo 16 Community.
 
-## Overview
+## 📦 Modules
 
-This project implements a custom Odoo 16 Community Edition solution designed specifically for DTX's business operations, including:
+### 1. **dtx_serial_ext** (v2.2.0)
+Serial number tracking với quản lý vendor invoice tự động.
 
-- Hardware device tracking with dual serial numbers
-- Vendor invoice management
-- Device lifecycle tracking
-- Project/contract management (coming soon)
-- Profitability analysis (coming soon)
+**Tính năng:**
+- ✅ Lifecycle state tracking (In Stock, Delivered, Installed, etc.)
+- ✅ Automatic vendor invoice state (Missing/Linked/Replaced)
+- ✅ Replacement invoice support cho edge cases
+- ✅ Many2many relationships đến PO/SO/Bills
+- ✅ Auto-update khi bill posted/cancelled
 
-## Project Status
+**Location:** `/odoo-dev/addons/dtx_serial_ext/`
 
-| Module | Status | Description |
-|--------|--------|-------------|
-| `dtx_serial_ext` | ✅ Complete | Serial/lot tracking with lifecycle management |
-| `dtx_vendorbill_alert` | 🚧 Planned | Warning system for deliveries without vendor invoices |
-| `dtx_ops_project` | 🚧 Planned | Lightweight project/contract management |
+### 2. **dtx_product_standards** (v1.1.0)
+Chuẩn hóa danh mục sản phẩm & BOM template cho Kiosk.
 
-**Target Go-Live:** 01/01/2026
+**Tính năng:**
+- ✅ 4 loại sản phẩm DTX (Device Serial, Component, Kiosk, Service)
+- ✅ Checklist tab kiểm tra cấu hình
+- ✅ Wizard áp dụng chuẩn hàng loạt
+- ✅ BOM Template cho Kiosk manufacturing (Excel-style)
+- ✅ Subcontracting support (basic)
 
-## Quick Start
+**Location:** `/odoo-dev/addons/dtx_product_standards/`
 
-### For End Users
-👉 **[Start Here](docs/START_HERE.md)** - Begin your journey
+## 🚀 Quick Start
 
-👉 **[Quick Start Guide](docs/user-guide/quick-start.md)** - 5-minute setup
+### Prerequisites
+- Docker & Docker Compose
+- Git
+- 8GB RAM minimum
 
-### For Developers
-👉 **[Development Environment](docs/developer-guide/development-environment.md)** - Setup dev environment
+### Setup (macOS/Linux)
+```bash
+# Clone repository
+git clone https://github.com/trungns/dtx_project.git
+cd dtx_project/odoo-dev
 
-👉 **[API Reference](docs/developer-guide/api-reference.md)** - Developer reference
+# Start Odoo
+./start.sh
 
-## Project Structure
+# Access Odoo
+# URL: http://localhost:8069
+# Database: dtx_dev
+# User: admin / Password: admin
+```
+
+### Setup (Windows)
+```powershell
+# Clone repository
+git clone https://github.com/trungns/dtx_project.git
+cd dtx_project\odoo-dev
+
+# Start Odoo
+docker-compose up -d
+
+# Access Odoo
+# URL: http://localhost:8069
+# Database: dtx_dev
+# User: admin / Password: admin
+```
+
+## 📚 Documentation
+
+- **[START HERE](docs/START_HERE.md)** - Bắt đầu từ đây
+- **[Architecture](docs/architecture/)** - Kiến trúc hệ thống
+- **[User Guide](docs/user-guide/)** - Hướng dẫn sử dụng
+- **[Developer Guide](docs/developer-guide/)** - Hướng dẫn phát triển
+- **[Deployment](docs/deployment/)** - Hướng dẫn deploy production
+
+## 🔧 Development
+
+### Install Modules
+```bash
+# In Odoo UI: Apps > Update Apps List
+# Search "DTX" > Install modules
+
+# Or via command line:
+docker-compose exec web odoo -d dtx_dev -i dtx_serial_ext,dtx_product_standards --stop-after-init
+```
+
+### Upgrade Modules
+```bash
+./upgrade-module.sh dtx_serial_ext
+./upgrade-module.sh dtx_product_standards
+```
+
+### View Logs
+```bash
+./logs.sh
+# Or: docker-compose logs -f web
+```
+
+## 📂 Project Structure
 
 ```
 dtx_project/
-├── README.md                      # This file
+├── docs/                           # Documentation
+│   ├── START_HERE.md              # Bắt đầu từ đây
+│   ├── architecture/              # System architecture
+│   ├── user-guide/                # User documentation
+│   ├── developer-guide/           # Developer docs
+│   └── deployment/                # Deployment guides
 │
-├── odoo-dev/                      # Development environment (Docker-based)
-│   ├── docker-compose.yml
-│   ├── config/
-│   ├── addons/                    # Custom modules
-│   │   ├── dtx_serial_ext/
-│   │   ├── dtx_vendorbill_alert/  (coming soon)
-│   │   └── dtx_ops_project/       (coming soon)
-│   └── scripts/
-│       ├── start.sh
-│       ├── upgrade-module.sh
-│       ├── logs.sh
-│       └── reset.sh
+├── odoo-dev/                      # Development environment
+│   ├── docker-compose.yml         # Docker setup
+│   ├── config/odoo.conf          # Odoo configuration
+│   ├── addons/                    # Custom addons
+│   │   ├── dtx_serial_ext/       # Serial tracking module
+│   │   └── dtx_product_standards/ # Product standards module
+│   └── scripts/                   # Helper scripts
 │
-├── dtx_serial_ext/                # Module source (production-ready)
-│   ├── __manifest__.py
-│   ├── models/
-│   ├── views/
-│   ├── security/
-│   └── static/
-│
-└── docs/                          # Documentation
-    ├── START_HERE.md              # Main entry point
-    ├── user-guide/                # End-user documentation
-    ├── developer-guide/           # Developer documentation
-    ├── deployment/                # Deployment guides
-    └── architecture/              # Technical architecture
+└── dtx_serial_ext/                # Standalone module (for production)
+    └── [same as odoo-dev/addons/dtx_serial_ext]
 ```
 
-## Documentation
+## 🛠️ Tech Stack
 
-### 📘 User Guides
-- [Start Here](docs/START_HERE.md) - Main entry point
-- [Quick Start (5 min)](docs/user-guide/quick-start.md) - Fast setup guide
-- [DTX Serial Extension](docs/user-guide/dtx-serial-extension.md) - User manual
+- **Odoo:** 16.0 Community
+- **Python:** 3.10
+- **PostgreSQL:** 15
+- **Docker:** Latest
+- **OS:** Ubuntu 22.04 (in Docker)
 
-### 👨‍💻 Developer Guides
-- [Development Environment Setup](docs/developer-guide/development-environment.md) - Complete dev setup
-- [API Reference](docs/developer-guide/api-reference.md) - Fields, methods, examples
-- [Code Quality Checklist](docs/developer-guide/code-quality-checklist.md) - Standards
+## 🎯 Modules Overview
 
-### 🚀 Deployment
-- [Installation Guide](docs/deployment/installation-guide.md) - Step-by-step installation
-- [Production Deployment](docs/deployment/production-deployment.md) - Deploy to production
+### dtx_serial_ext
+Track từng serial number với lifecycle state và vendor invoice state tự động.
 
-### 🏗️ Architecture
-- [System Architecture](docs/architecture/system-overview.md) - High-level design
-- [Module: dtx_serial_ext](docs/architecture/module-dtx-serial-ext.md) - Module technical spec
+**Use cases:**
+- Quản lý Touch screen, Mini PC, Máy in theo serial
+- Tự động link vendor bill khi nhập kho
+- Track lifecycle: Stock → Delivered → Installed
+- Support replacement invoice cho edge cases
 
-## Key Features
+### dtx_product_standards
+Chuẩn hóa dữ liệu sản phẩm, giảm sai sót, chuẩn bị cho manufacturing.
 
-### dtx_serial_ext (Serial Extension Module)
+**Use cases:**
+- Phân loại 4 loại sản phẩm DTX
+- Check cấu hình sản phẩm (Serial tracking, AVCO, BOM)
+- Áp dụng chuẩn hàng loạt qua wizard
+- Tạo BOM cho Kiosk manufacturing
 
-**Dual Serial Tracking:**
-- Supplier serial (primary key for warranty)
-- DTX internal serial (customer-facing)
-- Both searchable and displayed together
+## 📝 Version History
 
-**Lifecycle Management:**
-- 6 states: Stock → Allocated → Delivered → Installed → Maintenance → Scrapped
-- Automatic state updates based on stock moves
-- Manual override capability
+### Current Versions
+- **dtx_serial_ext:** 2.2.0 (2025-12-25)
+- **dtx_product_standards:** 1.1.0 (2025-12-25)
 
-**Vendor Invoice Tracking:**
-- Track invoice state per serial: Missing → Linked → Replaced
-- Auto-update when invoice reference entered
-- Solves real-world issue of receiving goods before invoices
+See [CHANGELOG](docs/CHANGELOG.md) for detailed version history.
 
-**Warranty Management:**
-- Start/end dates
-- Active/inactive indicator
-- Searchable and filterable
+## 🤝 Contributing
 
-## Development
+Development workflow:
+1. Create feature branch from `main`
+2. Make changes in `/odoo-dev/addons/`
+3. Test locally
+4. Commit with clear message
+5. Create Pull Request
 
-### Prerequisites
-- Docker Desktop (for Mac with Apple Silicon)
-- Git
-- Text editor / IDE
+## 📞 Support
 
-### Setup Development Environment
+- **Documentation:** [docs/](docs/)
+- **Issues:** [GitHub Issues](https://github.com/trungns/dtx_project/issues)
+- **Email:** trungns@dtx.com
 
-```bash
-# Navigate to project
-cd dtx_project/odoo-dev
+## 📄 License
 
-# Start Odoo (first time will download images)
-./start.sh
-
-# Open browser
-open http://localhost:8069
-
-# Create database: dtx_dev
-# Install module: DTX Serial Extension
-```
-
-### Development Workflow
-
-```bash
-# Edit code in odoo-dev/addons/dtx_serial_ext/
-
-# Upgrade module after changes
-./upgrade-module.sh dtx_serial_ext
-
-# View logs
-./logs.sh
-
-# Restart Odoo
-docker-compose restart odoo
-```
-
-See [Development Environment Guide](docs/developer-guide/development-environment.md) for details.
-
-## Testing
-
-### Manual Testing
-See [Installation Guide - Testing Section](docs/deployment/installation-guide.md#testing-guide) for 10 detailed test scenarios.
-
-### Automated Testing
-(Coming soon)
-
-## Deployment
-
-### To Development
-Already configured via Docker. See [Quick Start](docs/user-guide/quick-start.md).
-
-### To Production
-See [Production Deployment Guide](docs/deployment/production-deployment.md).
-
-## Technology Stack
-
-| Component | Version | Purpose |
-|-----------|---------|---------|
-| Odoo | 16.0 Community | ERP Platform |
-| PostgreSQL | 15 | Database |
-| Python | 3.10 | Backend |
-| Docker | Latest | Development environment |
-| XML | - | Views/UI |
-
-## Business Context
-
-DTX sells and deploys smart queue management systems including:
-- Hardware: Kiosks, screens, printers, tablets, LED displays
-- Software: License management
-- Services: Deployment, installation, maintenance
-
-### Key Business Challenges Solved
-
-1. **Serial Tracking:** Dual serial numbers (supplier + internal) with lifecycle states
-2. **Vendor Invoice Lag:** Devices received before invoices arrive
-3. **Costing:** Average cost auto-calculation
-4. **Project Management:** Lightweight contract tracking (coming soon)
-5. **Profitability:** Revenue vs. cost analysis (coming soon)
-
-## Design Principles
-
-✅ **SIMPLE FIRST** - Manual fields over complex automation
-✅ **MANAGEMENT > ACCOUNTING** - Visibility over strict accounting
-✅ **SERIAL IS KING** - Everything revolves around serial tracking
-✅ **WARNING > BLOCKING** - Warn users, don't block workflows
-✅ **MOBILE FRIENDLY** - All forms work on Odoo mobile app
-✅ **SMALL ADDONS** - Multiple focused modules vs. monolithic
-
-## Contributing
-
-This is an internal DTX project. For questions or suggestions:
-- Contact DTX development team
-- Submit issues/requests through internal channels
-
-## License
-
-Proprietary - DTX Internal Use Only
-
-Individual modules may use LGPL-3 (Odoo standard) where applicable.
-
-## Support
-
-For support:
-1. Check documentation in `docs/` folder
-2. Review troubleshooting guides
-3. Contact DTX development team
-
-## Roadmap
-
-### Phase 1: Foundation (Current)
-- [x] Development environment setup
-- [x] Module: dtx_serial_ext
-- [ ] Testing and validation
-
-### Phase 2: Vendor Invoice Alert
-- [ ] Module: dtx_vendorbill_alert
-- [ ] Integration testing
-
-### Phase 3: Project Management
-- [ ] Module: dtx_ops_project
-- [ ] Profitability tracking
-- [ ] Cost management
-
-### Phase 4: Production Deployment
-- [ ] Production environment setup
-- [ ] Data migration (if needed)
-- [ ] User training
-- [ ] Go-live: 01/01/2026
-
-## Changelog
-
-### 2025-12-23
-- ✅ Initial project structure
-- ✅ Development environment (Docker-based)
-- ✅ Module: dtx_serial_ext v16.0.1.0.0
-- ✅ Complete documentation suite
+LGPL-3 - See individual modules for details.
 
 ---
 
-**Built with ❤️ for DTX Smart Queue Management Systems**
+**DTX Project**
+Built with Odoo 16 Community | Generated with [Claude Code](https://claude.com/claude-code)
