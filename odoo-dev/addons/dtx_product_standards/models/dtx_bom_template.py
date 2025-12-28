@@ -36,8 +36,8 @@ class DtxBomTemplate(models.Model):
     subcontractor_id = fields.Many2one(
         'res.partner',
         string='Đối tác gia công',
-        domain="[('supplier_rank', '>', 0)]",
-        help='Nếu có: BOM sẽ được cấu hình cho gia công thuê ngoài (subcontracting)',
+        domain="[('is_company', '=', True)]",
+        help='Chọn đối tác gia công (Lưu ý: Partner phải tick "Is a Vendor" để dùng cho Subcontracting). BOM sẽ được cấu hình cho gia công thuê ngoài.',
     )
 
     notes = fields.Text(

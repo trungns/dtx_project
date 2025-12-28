@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Product Standards',
-    'version': '16.0.1.1.0',
+    'version': '16.0.1.2.0',
     'category': 'Inventory/Inventory',
     'summary': 'Chuẩn hóa danh mục sản phẩm DTX & nền tảng sản xuất kiosk',
     'description': """
@@ -20,6 +20,14 @@ Tính năng chính:
 - BOM Template cho Kiosk (Excel-style, không ERP hóa)
 - Hỗ trợ subcontracting cơ bản
 - Không ép buộc workflow, chỉ hỗ trợ
+
+Version 1.2.0:
+- IMPROVED: Menu structure reorganization
+  - Removed duplicate "Sản phẩm DTX" menu
+  - Integrated DTX features into standard Products menu
+  - Moved tools to Configuration > DTX - Công cụ
+  - Fixed subcontractor selection in BOM Template
+- Single unified workflow, no more confusion
 
 Version 1.1.0:
 - NEW: BOM Template for Kiosk manufacturing

@@ -54,3 +54,4 @@ logs/
 tmp/
 temp/
 *.tmp
+odoo-dev/config/odoo.conf

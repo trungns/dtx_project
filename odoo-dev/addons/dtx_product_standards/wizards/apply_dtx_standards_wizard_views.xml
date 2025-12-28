@@ -104,4 +104,11 @@
         <field name="binding_view_types">list</field>
     </record>
 
+    <!-- Menu shortcut under DTX - Công cụ -->
+    <menuitem id="menu_apply_dtx_standards"
+              name="Áp dụng chuẩn DTX"
+              parent="dtx_product_standards.menu_dtx_tools"
+              action="action_apply_dtx_standards_wizard"
+              sequence="20"/>
+
 </odoo>

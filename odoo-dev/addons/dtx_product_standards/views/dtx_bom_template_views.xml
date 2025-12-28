@@ -172,11 +172,11 @@
         </field>
     </record>
 
-    <!-- Add menu item -->
+    <!-- Add menu item under DTX - Công cụ -->
     <menuitem id="menu_dtx_bom_template"
               name="Mẫu BOM Kiosk"
-              parent="menu_dtx_product_standards"
+              parent="dtx_product_standards.menu_dtx_tools"
               action="action_dtx_bom_template"
-              sequence="20"/>
+              sequence="10"/>
 
 </odoo>
