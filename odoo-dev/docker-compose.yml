@@ -30,6 +30,8 @@ services:
     volumes:
       # Custom addons (your modules)
       - ./addons:/mnt/extra-addons
+      # Scripts for automation
+      - ./scripts:/mnt/scripts
       # Odoo data (filestore, sessions)
       - odoo_data:/var/lib/odoo
       # Config file

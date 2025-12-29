@@ -20,7 +20,7 @@ import xmlrpc.client
 # ============================================
 ODOO_URL = 'http://localhost:8069'
 DB_NAME = 'dtx_dev'
-USERNAME = 'admin'
+USERNAME = 'admin@dtxco.vn'
 PASSWORD = 'admin'
 
 # ============================================
