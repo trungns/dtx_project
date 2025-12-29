@@ -135,13 +135,57 @@ vendors = [
             [[('code', '=', 'VN')]],
             {'limit': 1}
         ) else False,
+        'comment': 'Đối tác gia công lắp ráp Kiosk',
     },
     {
-        'name': 'Nhà cung cấp Linh kiện A',
+        'name': 'Công ty TNHH Touch Display Việt Nam',
         'is_company': True,
         'supplier_rank': 1,
-        'phone': '0909999888',
-        'email': 'supplier_a@example.com',
+        'phone': '0281234567',
+        'email': 'touchvn@example.com',
+        'street': 'Quận 7',
+        'city': 'TP.HCM',
+        'comment': 'Nhà cung cấp màn hình cảm ứng',
+    },
+    {
+        'name': 'Công ty CP Thiết bị In Hà Nội',
+        'is_company': True,
+        'supplier_rank': 1,
+        'phone': '0241234567',
+        'email': 'printhn@example.com',
+        'street': 'Cầu Giấy',
+        'city': 'Hà Nội',
+        'comment': 'Nhà cung cấp máy in nhiệt',
+    },
+    {
+        'name': 'Công ty TNHH PC Components VN',
+        'is_company': True,
+        'supplier_rank': 1,
+        'phone': '0283456789',
+        'email': 'pcvn@example.com',
+        'street': 'Quận 1',
+        'city': 'TP.HCM',
+        'comment': 'Nhà cung cấp Mini PC',
+    },
+    {
+        'name': 'Công ty TNHH Camera & Security',
+        'is_company': True,
+        'supplier_rank': 1,
+        'phone': '0909876543',
+        'email': 'camsec@example.com',
+        'street': 'Quận Tân Bình',
+        'city': 'TP.HCM',
+        'comment': 'Nhà cung cấp Camera IP',
+    },
+    {
+        'name': 'Công ty TNHH NFC Technology',
+        'is_company': True,
+        'supplier_rank': 1,
+        'phone': '0243456789',
+        'email': 'nfctech@example.com',
+        'street': 'Hoàn Kiếm',
+        'city': 'Hà Nội',
+        'comment': 'Nhà cung cấp đầu đọc CCCD',
     },
 ]
 
@@ -300,7 +344,13 @@ print("✅ SETUP COMPLETED SUCCESSFULLY!")
 print("=" * 60)
 print("\nSummary:")
 print("  ✓ 4 Product Categories created")
-print("  ✓ 2 Vendors created")
+print("  ✓ 6 Vendors created:")
+print("    - LGMEC (gia công)")
+print("    - Touch Display VN (màn hình)")
+print("    - Thiết bị In HN (máy in)")
+print("    - PC Components VN (Mini PC)")
+print("    - Camera & Security (camera)")
+print("    - NFC Technology (CCCD reader)")
 print("  ✓ 5 Components (with serial) created")
 print("  ✓ 1 Kiosk product created")
 print("  ✓ 1 Service created")
