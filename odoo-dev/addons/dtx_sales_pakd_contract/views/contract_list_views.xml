@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Contract List Tree View -->
+    <record id="view_contract_list_tree" model="ir.ui.view">
+        <field name="name">sale.order.contract.list.tree</field>
+        <field name="model">sale.order</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <tree string="Danh sách hợp đồng"
+                  decoration-success="state=='sale'"
+                  decoration-info="state=='draft'"
+                  create="false"
+                  delete="false">
+                <field name="name" string="Dự án"/>
+                <field name="partner_id" string="Khách hàng"/>
+                <field name="x_end_customer_id" string="End user" optional="show"/>
+                <field name="state" string="Trạng thái" widget="badge"
+                       decoration-success="state=='sale'"
+                       decoration-info="state in ('draft','sent')"
+                       decoration-muted="state=='cancel'"/>
+                <field name="x_revenue_expected" string="Doanh thu dự kiến" sum="Tổng" optional="show"/>
+                <field name="x_revenue_actual" string="Doanh thu thực tế" sum="Tổng" optional="show"/>
+                <field name="x_payment_date" string="Ngày thanh toán" optional="show"/>
+                <field name="x_total_cost" string="Chi phí" sum="Tổng" optional="show"/>
+                <field name="x_profit" string="Lãi" sum="Tổng" optional="show"/>
+                <field name="x_profit_margin" string="Lãi (%)" avg="Trung bình" optional="show"/>
+                <field name="x_contract_no" string="Hợp đồng số" optional="show"/>
+                <field name="x_signed_date" string="Ngày ký hợp đồng" optional="show"/>
+                <field name="x_contract_end_date" string="Ngày hết hạn HĐ" optional="show"/>
+                <field name="commitment_date" string="Ngày ban giao thực tế" optional="hide"/>
+                <field name="currency_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Contract List Search View -->
+    <record id="view_contract_list_search" model="ir.ui.view">
+        <field name="name">sale.order.contract.list.search</field>
+        <field name="model">sale.order</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm hợp đồng">
+                <field name="name" string="Dự án / Số HĐ" filter_domain="['|', ('name', 'ilike', self), ('x_contract_no', 'ilike', self)]"/>
+                <field name="partner_id" string="Khách hàng"/>
+                <field name="x_end_customer_id" string="End User"/>
+                <field name="x_contract_no" string="Số hợp đồng"/>
+
+                <filter string="Có số hợp đồng" name="has_contract_no" domain="[('x_contract_no', '!=', False)]"/>
+                <filter string="Đã thanh toán" name="paid" domain="[('x_payment_date', '!=', False)]"/>
+                <filter string="Chưa thanh toán" name="unpaid" domain="[('x_payment_date', '=', False), ('state', '=', 'sale')]"/>
+
+                <separator/>
+                <filter string="Đơn hàng" name="sales_order" domain="[('state', '=', 'sale')]"/>
+                <filter string="Nháp" name="draft" domain="[('state', 'in', ('draft', 'sent'))]"/>
+
+                <separator/>
+                <filter string="Lãi > 0" name="profitable" domain="[('x_profit', '&gt;', 0)]"/>
+                <filter string="Lỗ" name="loss" domain="[('x_profit', '&lt;', 0)]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Khách hàng" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="End User" name="group_end_user" context="{'group_by': 'x_end_customer_id'}"/>
+                    <filter string="Trạng thái" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Tháng ký HĐ" name="group_signed_month" context="{'group_by': 'x_signed_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Contract List Action -->
+    <record id="action_contract_list" model="ir.actions.act_window">
+        <field name="name">Danh sách hợp đồng</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_contract_list_tree"/>
+        <field name="search_view_id" ref="view_contract_list_search"/>
+        <field name="domain">[('x_contract_no', '!=', False)]</field>
+        <field name="context">{
+            'search_default_sales_order': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tạo hợp đồng đầu tiên
+            </p>
+            <p>
+                Danh sách này hiển thị các Sale Order đã có số hợp đồng.<br/>
+                Để tạo hợp đồng: Vào Quotations → Confirm → Điền số hợp đồng trong tab "Hợp đồng".
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_contract_list"
+              name="Hợp đồng"
+              parent="sale.sale_menu_root"
+              action="action_contract_list"
+              sequence="3"/>
+
+</odoo>

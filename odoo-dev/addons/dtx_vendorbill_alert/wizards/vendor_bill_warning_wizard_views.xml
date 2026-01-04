@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vendor Bill Warning Wizard Form View -->
+    <record id="view_vendor_bill_warning_wizard_form" model="ir.ui.view">
+        <field name="name">dtx.vendor.bill.warning.wizard.form</field>
+        <field name="model">dtx.vendor.bill.warning.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cảnh báo: Thiếu hóa đơn nhà cung cấp">
+                <sheet>
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading">
+                            <i class="fa fa-exclamation-triangle"/> Cảnh báo: Thiếu hóa đơn nhà cung cấp
+                        </h4>
+                        <p>
+                            Bạn đang chuẩn bị xác nhận phiếu xuất <strong><field name="picking_id" readonly="1" class="oe_inline"/></strong>
+                            có chứa <strong><field name="missing_lot_count" readonly="1" class="oe_inline"/> serial</strong>
+                            chưa có hóa đơn nhà cung cấp.
+                        </p>
+                        <p class="mb-0">
+                            <strong>Điều này có thể do:</strong>
+                        </p>
+                        <ul>
+                            <li>Hàng đã nhập kho nhưng hóa đơn NCC chưa được tạo</li>
+                            <li>Hóa đơn dự kiến sẽ nhận từ NCC sau</li>
+                            <li>Hàng được mua không có hóa đơn (trường hợp đặc biệt)</li>
+                        </ul>
+                    </div>
+
+                    <separator string="Danh sách Serial bị ảnh hưởng" style="margin-top: 16px;"/>
+
+                    <field name="missing_lot_details" nolabel="1" readonly="1" widget="html"/>
+
+                    <separator string="Lý do xuất kho" style="margin-top: 24px; margin-bottom: 12px;"/>
+
+                    <field name="note"
+                           placeholder="Ví dụ: 'Sẽ xin hóa đơn thay thế từ NCC tuần sau' hoặc 'Hàng mua chợ không có hóa đơn, sẽ link hóa đơn thay thế sau'"
+                           nolabel="1"
+                           required="1"
+                           style="min-height: 80px;"/>
+
+                    <div class="alert alert-info" role="alert" style="margin-top: 16px;">
+                        <p class="mb-0">
+                            <i class="fa fa-info-circle"/> Ghi chú của bạn sẽ được lưu vào lịch sử của từng serial
+                            và đăng lên chatter của phiếu xuất này để kiểm tra sau.
+                        </p>
+                    </div>
+
+                    <!-- Hidden fields for context -->
+                    <field name="missing_lot_ids" invisible="1"/>
+                </sheet>
+
+                <footer>
+                    <button name="action_confirm"
+                            string="Xác nhận &amp; Tiếp tục"
+                            type="object"
+                            class="btn-primary"
+                            data-hotkey="q"/>
+                    <button name="action_cancel"
+                            string="Hủy"
+                            type="object"
+                            class="btn-secondary"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open wizard (called from stock.picking.button_validate) -->
+    <record id="action_vendor_bill_warning_wizard" model="ir.actions.act_window">
+        <field name="name">Vendor Bill Warning</field>
+        <field name="res_model">dtx.vendor.bill.warning.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+    </record>
+
+</odoo>

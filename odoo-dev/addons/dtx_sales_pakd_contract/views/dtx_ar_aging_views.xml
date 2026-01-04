@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AR Aging Config Form -->
+    <record id="view_dtx_ar_aging_config_form" model="ir.ui.view">
+        <field name="name">dtx.ar.aging.config.form</field>
+        <field name="model">dtx.ar.aging.config</field>
+        <field name="arch" type="xml">
+            <form string="Cấu hình tuổi nợ">
+                <sheet>
+                    <group>
+                        <group string="Công ty">
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Ngưỡng tuổi nợ (ngày)">
+                            <field name="bucket_1_days"/>
+                            <field name="bucket_2_days"/>
+                            <field name="bucket_3_days"/>
+                            <field name="bucket_4_days"/>
+                            <field name="bucket_5_days"/>
+                        </group>
+                        <group string="Labels hiển thị">
+                            <field name="bucket_1_label" readonly="1"/>
+                            <field name="bucket_2_label" readonly="1"/>
+                            <field name="bucket_3_label" readonly="1"/>
+                            <field name="bucket_4_label" readonly="1"/>
+                            <field name="bucket_5_label" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- AR Aging Config Action -->
+    <record id="action_dtx_ar_aging_config" model="ir.actions.act_window">
+        <field name="name">Cấu hình tuổi nợ</field>
+        <field name="res_model">dtx.ar.aging.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Cấu hình ngưỡng tuổi nợ
+            </p>
+            <p>
+                Thiết lập các ngưỡng số ngày để phân loại công nợ quá hạn.
+            </p>
+        </field>
+    </record>
+
+    <!-- AR Aging Summary Tree -->
+    <record id="view_dtx_ar_aging_summary_tree" model="ir.ui.view">
+        <field name="name">dtx.ar.aging.summary.tree</field>
+        <field name="model">dtx.ar.aging.summary</field>
+        <field name="arch" type="xml">
+            <tree string="Tổng hợp tuổi nợ" create="false" edit="false" delete="false"
+                  decoration-warning="max_days_overdue > 0 and max_days_overdue &lt;= 30"
+                  decoration-danger="max_days_overdue > 30">
+                <field name="partner_id"/>
+                <field name="salesperson_id"/>
+                <field name="total_residual" sum="Tổng"/>
+                <field name="bucket_current" sum="Tổng" optional="show"/>
+                <field name="bucket_1" sum="Tổng"/>
+                <field name="bucket_2" sum="Tổng"/>
+                <field name="bucket_3" sum="Tổng"/>
+                <field name="bucket_4" sum="Tổng" optional="hide"/>
+                <field name="bucket_5" sum="Tổng" optional="hide"/>
+                <field name="bucket_over" sum="Tổng" optional="show"/>
+                <field name="max_days_overdue"/>
+                <field name="invoice_count"/>
+                <field name="oldest_invoice_date" optional="hide"/>
+                <field name="last_invoice_date" optional="hide"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="company_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- AR Aging Summary Search -->
+    <record id="view_dtx_ar_aging_summary_search" model="ir.ui.view">
+        <field name="name">dtx.ar.aging.summary.search</field>
+        <field name="model">dtx.ar.aging.summary</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm công nợ">
+                <field name="partner_id"/>
+                <field name="salesperson_id"/>
+                <separator/>
+                <filter name="overdue" string="Quá hạn"
+                        domain="[('max_days_overdue', '>', 0)]"/>
+                <filter name="overdue_30" string="Quá hạn > 30 ngày"
+                        domain="[('max_days_overdue', '>', 30)]"/>
+                <filter name="overdue_60" string="Quá hạn > 60 ngày"
+                        domain="[('max_days_overdue', '>', 60)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter name="group_salesperson" string="Nhân viên bán hàng"
+                            context="{'group_by': 'salesperson_id'}"/>
+                    <filter name="group_partner" string="Khách hàng"
+                            context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- AR Aging Summary Pivot -->
+    <record id="view_dtx_ar_aging_summary_pivot" model="ir.ui.view">
+        <field name="name">dtx.ar.aging.summary.pivot</field>
+        <field name="model">dtx.ar.aging.summary</field>
+        <field name="arch" type="xml">
+            <pivot string="Phân tích công nợ">
+                <field name="salesperson_id" type="row"/>
+                <field name="total_residual" type="measure"/>
+                <field name="bucket_current" type="measure"/>
+                <field name="bucket_1" type="measure"/>
+                <field name="bucket_2" type="measure"/>
+                <field name="bucket_3" type="measure"/>
+                <field name="bucket_over" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- AR Aging Summary Action -->
+    <record id="action_dtx_ar_aging_summary" model="ir.actions.act_window">
+        <field name="name">Tổng hợp tuổi nợ</field>
+        <field name="res_model">dtx.ar.aging.summary</field>
+        <field name="view_mode">tree,pivot</field>
+        <field name="context">{'search_default_overdue': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Không có công nợ
+            </p>
+            <p>
+                Báo cáo tổng hợp tuổi nợ phải thu theo khách hàng.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_dtx_ar_root"
+              name="Công nợ"
+              parent="sale.sale_menu_root"
+              sequence="50"/>
+
+    <menuitem id="menu_dtx_ar_aging_summary"
+              name="Tổng hợp tuổi nợ"
+              parent="menu_dtx_ar_root"
+              action="action_dtx_ar_aging_summary"
+              sequence="10"/>
+
+    <menuitem id="menu_dtx_ar_aging_config"
+              name="Cấu hình tuổi nợ"
+              parent="menu_dtx_ar_root"
+              action="action_dtx_ar_aging_config"
+              sequence="90"
+              groups="sales_team.group_sale_manager"/>
+
+</odoo>

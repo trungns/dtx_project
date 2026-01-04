@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit sale.order form view -->
+    <record id="view_order_form_dtx_contract" model="ir.ui.view">
+        <field name="name">sale.order.form.dtx.contract</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add smart buttons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <!-- PAKD smart button -->
+                <button name="action_view_pakd"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-file-text-o"
+                        attrs="{'invisible': [('pakd_count', '=', 0)]}">
+                    <field name="pakd_count" widget="statinfo" string="PAKD"/>
+                </button>
+
+                <!-- Contract scans smart button -->
+                <button name="action_view_contract_scans"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-paperclip"
+                        attrs="{'invisible': [('x_contract_scan_count', '=', 0)]}">
+                    <field name="x_contract_scan_count" widget="statinfo" string="File HĐ"/>
+                </button>
+            </xpath>
+
+            <!-- Add DTX Business group after partner_id -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="x_end_customer_id"
+                       string="Khách hàng cuối (End User)"/>
+                <field name="x_agent_id"
+                       string="Đại lý cấp 2 (nếu có)"
+                       options="{'no_create': True, 'no_open': True}"/>
+            </xpath>
+
+            <!-- Add Contract group in a new page -->
+            <xpath expr="//page[@name='other_information']" position="after">
+                <page string="Hợp đồng" name="contract_info">
+                    <group>
+                        <group string="Thông tin hợp đồng">
+                            <field name="x_contract_no"/>
+                            <field name="x_signed_date"/>
+                            <field name="x_contract_end_date"/>
+                        </group>
+                        <group string="File scan hợp đồng">
+                            <field name="x_contract_scan_attachment_ids"
+                                   widget="many2many_binary"
+                                   string="Upload file scan"
+                                   nolabel="1"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Add PAKD tab -->
+            <xpath expr="//page[@name='contract_info']" position="after">
+                <page string="Phương án kinh doanh (PAKD)" name="pakd_list">
+                    <group>
+                        <button name="action_create_pakd"
+                                type="object"
+                                string="Tạo PAKD mới"
+                                class="oe_highlight"
+                                help="Tạo phương án kinh doanh mới từ các dòng báo giá hiện tại"/>
+                    </group>
+                    <field name="pakd_ids" nolabel="1">
+                        <tree string="Danh sách PAKD" decoration-info="state=='draft'"
+                              decoration-success="state=='approved'" decoration-danger="state=='rejected'">
+                            <field name="name"/>
+                            <field name="owner_user_id"/>
+                            <field name="state"/>
+                            <field name="total_contract_untaxed" sum="Tổng"/>
+                            <field name="total_purchase" sum="Tổng"/>
+                            <field name="expected_profit" sum="Tổng"/>
+                            <field name="expected_margin_percent" avg="TB"/>
+                            <field name="create_date"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+
+            <!-- Add Contract Costs tab -->
+            <xpath expr="//page[@name='pakd_list']" position="after">
+                <page string="Chi phí hợp đồng" name="contract_costs">
+                    <field name="contract_cost_count" invisible="1"/>
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('contract_cost_count', '>', 0)]}">
+                        <p><strong>Chưa có chi phí hợp đồng</strong></p>
+                        <p>Sau khi PAKD được duyệt, hãy click nút "Import chi phí từ PAKD" bên dưới để import chi phí dự kiến.</p>
+                    </div>
+
+                    <group>
+                        <button name="action_import_pakd_costs"
+                                type="object"
+                                string="Import chi phí từ PAKD"
+                                class="btn-primary"
+                                attrs="{'invisible': ['|', ('pakd_count', '=', 0), ('state', '!=', 'sale')]}"
+                                help="Import chi phí từ PAKD đã duyệt. Sẽ xóa chi phí cũ từ PAKD (giữ chi phí phát sinh)."/>
+                    </group>
+
+                    <field name="contract_cost_ids" nolabel="1">
+                        <tree string="Chi phí hợp đồng" editable="bottom" decoration-danger="cost_type=='additional'">
+                            <field name="sequence" widget="handle"/>
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="qty"/>
+                            <field name="uom_id" groups="uom.group_uom"/>
+                            <field name="planned_unit_cost" readonly="1"/>
+                            <field name="actual_unit_cost"/>
+                            <field name="planned_total" readonly="1" sum="Tổng dự kiến"/>
+                            <field name="actual_total" readonly="1" sum="Tổng thực tế"/>
+                            <field name="variance" readonly="1" sum="Chênh lệch"/>
+                            <field name="cost_type"/>
+                            <field name="currency_id" invisible="1"/>
+                        </tree>
+                    </field>
+
+                    <group class="oe_subtotal_footer oe_right">
+                        <field name="x_total_cost" widget="monetary" options="{'currency_field': 'currency_id'}" readonly="1"/>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Hide unused fields for DTX users -->
+            <xpath expr="//field[@name='campaign_id']" position="attributes">
+                <attribute name="groups">!dtx_sales_pakd_contract.group_dtx_ui_simplified</attribute>
+            </xpath>
+            <xpath expr="//field[@name='medium_id']" position="attributes">
+                <attribute name="groups">!dtx_sales_pakd_contract.group_dtx_ui_simplified</attribute>
+            </xpath>
+            <xpath expr="//field[@name='source_id']" position="attributes">
+                <attribute name="groups">!dtx_sales_pakd_contract.group_dtx_ui_simplified</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

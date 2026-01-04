@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+{
+    'name': 'DTX Sales PAKD Contract',
+    'version': '16.0.1.3.0',
+    'category': 'Sales',
+    'summary': 'Phương Án Kinh Doanh (PAKD) và quản lý hợp đồng cho Sales Order',
+    'description': """
+DTX Sales PAKD Contract
+=======================
+Quản lý Phương Án Kinh Doanh (PAKD) và Hợp đồng tích hợp với Sales Order.
+
+Tính năng chính:
+- Extend sale.order với các field hợp đồng (số HĐ, ngày ký, file scan...)
+- Model PAKD riêng biệt: nhiều PAKD cho 1 quotation
+- PAKD line với giá nhập/giá bán/giá hợp đồng/VAT/profit
+- Map VAT% tự động sang account.tax
+- Wizard Apply PAKD → cập nhật sale.order.line
+- **Chi phí hợp đồng thực tế** (v1.1.0): Import từ PAKD + chi phí phát sinh
+- **Danh sách hợp đồng** (v1.1.0): Theo dõi lãi/lỗ theo từng hợp đồng
+- **AR Aging** (v1.2.0): Tổng hợp tuổi nợ phải thu theo bucket
+- **PAKD Excel formulas** (v1.3.0): Công thức chính xác theo file Excel template
+- Security groups: CEO, Sales Director, Chief Accountant, Sales User
+- Record rules phân quyền theo owner
+- UI gọn nhẹ, ẩn field không dùng cho DTX
+- Upload file scan hợp đồng (PDF/JPG)
+- Tương thích data cũ, không phá workflow core
+
+Version 1.3.0:
+- **CRITICAL FIX**: PAKD formulas now match Excel template exactly
+- Add new fields: cushion_amount, referral_commission_percent
+- Fix tax_withheld_amount: base is price_diff (not total_contract_untaxed)
+- Fix customer_support_cost: computed as cushion + commission
+- Fix referral_commission: computed from percentage
+- Update field labels to match Excel PAKD template
+- Restructure "Tổng kết" tab with numbered rows matching Excel
+
+Version 1.2.0:
+- Add AR Aging report with bucket classification
+- Add x_ar_* fields on sale.order (residual, days overdue, status)
+- SQL view for performance with 10K+ invoices
+- Configurable aging buckets (default: 7/15/30/60/90 days)
+
+Version 1.1.0:
+- Add dtx.contract.cost model for actual cost tracking
+- Add contract list view with financial analysis
+- Import costs from approved PAKD
+- Track planned vs actual costs with variance
+- Support additional costs outside PAKD
+- Compute profit and margin per contract
+
+Version 1.0.0:
+- Initial release
+- Multi-PAKD per quotation
+- Contract fields on sale.order
+- Auto VAT mapping
+- Apply wizard with price override
+- Security groups and record rules
+    """,
+    'author': 'DTX',
+    'website': 'https://www.dtx.com',
+    'license': 'LGPL-3',
+    'depends': [
+        'sale',
+        'sale_management',
+        'account',
+        'product',
+    ],
+    'data': [
+        'security/security_groups.xml',
+        'security/ir.model.access.csv',
+        'security/record_rules.xml',
+        'data/ir_sequence_data.xml',
+        'views/sale_order_views.xml',
+        'views/dtx_pakd_views.xml',
+        'views/contract_cost_views.xml',
+        'views/contract_list_views.xml',
+        'views/dtx_ar_aging_views.xml',
+        'wizards/pakd_apply_wizard_views.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+    'application': False,
+}

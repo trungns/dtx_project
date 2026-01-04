@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Contract Cost Tree View -->
+    <record id="view_contract_cost_tree" model="ir.ui.view">
+        <field name="name">dtx.contract.cost.tree</field>
+        <field name="model">dtx.contract.cost</field>
+        <field name="arch" type="xml">
+            <tree string="Chi phí hợp đồng" editable="bottom" decoration-danger="cost_type=='additional'">
+                <field name="sequence" widget="handle"/>
+                <field name="product_id"/>
+                <field name="name"/>
+                <field name="qty"/>
+                <field name="uom_id" groups="uom.group_uom"/>
+                <field name="planned_unit_cost" readonly="1"/>
+                <field name="actual_unit_cost"/>
+                <field name="planned_total" readonly="1" sum="Tổng dự kiến"/>
+                <field name="actual_total" readonly="1" sum="Tổng thực tế"/>
+                <field name="variance" readonly="1" sum="Chênh lệch"/>
+                <field name="cost_type"/>
+                <field name="notes"/>
+                <field name="currency_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Contract Cost Form View -->
+    <record id="view_contract_cost_form" model="ir.ui.view">
+        <field name="name">dtx.contract.cost.form</field>
+        <field name="model">dtx.contract.cost</field>
+        <field name="arch" type="xml">
+            <form string="Chi phí hợp đồng">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="sale_order_id"/>
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="cost_type"/>
+                        </group>
+                        <group>
+                            <field name="qty"/>
+                            <field name="uom_id" groups="uom.group_uom"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+
+                    <group string="Chi phí">
+                        <group string="Dự kiến (từ PAKD)">
+                            <field name="planned_unit_cost" readonly="1"/>
+                            <field name="planned_total" readonly="1"/>
+                        </group>
+                        <group string="Thực tế">
+                            <field name="actual_unit_cost"/>
+                            <field name="actual_total" readonly="1"/>
+                            <field name="variance" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Ghi chú">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

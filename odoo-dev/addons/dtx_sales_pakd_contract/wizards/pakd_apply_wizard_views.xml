@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- PAKD Apply Wizard Form View -->
+    <record id="view_pakd_apply_wizard_form" model="ir.ui.view">
+        <field name="name">dtx.pakd.apply.wizard.form</field>
+        <field name="model">dtx.pakd.apply.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Apply PAKD vào Báo giá">
+                <sheet>
+                    <div class="alert alert-info" role="alert" attrs="{'invisible': [('warning_message', '=', False)]}">
+                        <field name="warning_message" nolabel="1" readonly="1"/>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="pakd_id" readonly="1"/>
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="sale_order_state" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="replace_lines"/>
+                            <field name="price_source"/>
+                        </group>
+                    </group>
+
+                    <separator string="Hướng dẫn"/>
+                    <div class="text-muted">
+                        <p><strong>Thay thế toàn bộ dòng hiện tại:</strong></p>
+                        <ul>
+                            <li>✅ Tick: Xóa tất cả dòng hiện tại trong báo giá và tạo mới từ PAKD</li>
+                            <li>❌ Không tick: Giữ nguyên dòng cũ, thêm dòng mới từ PAKD vào cuối</li>
+                        </ul>
+
+                        <p><strong>Nguồn giá:</strong></p>
+                        <ul>
+                            <li><strong>Ưu tiên đơn giá HĐ:</strong> Dùng "Đơn giá HĐ" nếu có, không có thì dùng "Đơn giá báo giá"</li>
+                            <li><strong>Chỉ dùng đơn giá báo giá:</strong> Luôn dùng "Đơn giá báo giá", bỏ qua "Đơn giá HĐ"</li>
+                        </ul>
+
+                        <p class="text-warning">
+                            <i class="fa fa-exclamation-triangle"/> <strong>Lưu ý:</strong>
+                            Sau khi apply, các dòng trong báo giá sẽ được cập nhật theo PAKD.
+                            Kiểm tra kỹ trước khi Confirm đơn hàng.
+                        </p>
+                    </div>
+                </sheet>
+
+                <footer>
+                    <button name="action_apply"
+                            type="object"
+                            string="Apply"
+                            class="btn-primary"
+                            data-hotkey="q"/>
+                    <button name="action_cancel"
+                            type="object"
+                            string="Hủy"
+                            class="btn-secondary"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

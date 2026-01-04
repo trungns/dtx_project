@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         SALE.ORDER RECORD RULES
+         ========================================== -->
+
+    <!-- CEO, Sales Director, Chief Accountant: Full access to all sale.orders -->
+    <record id="sale_order_rule_dtx_manager" model="ir.rule">
+        <field name="name">DTX Managers: All Sales Orders</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_dtx_ceo')), (4, ref('group_dtx_sales_director')), (4, ref('group_dtx_chief_accountant'))]"/>
+    </record>
+
+    <!-- Sales User: Only own sales orders -->
+    <record id="sale_order_rule_dtx_sales_user" model="ir.rule">
+        <field name="name">DTX Sales User: Own Sales Orders</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_dtx_sales_user'))]"/>
+    </record>
+
+    <!-- Account User: Read all sales orders -->
+    <record id="sale_order_rule_account_user_read" model="ir.rule">
+        <field name="name">Account User: Read All Sales Orders</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('account.group_account_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ==========================================
+         DTX.PAKD RECORD RULES
+         ========================================== -->
+
+    <!-- CEO, Sales Director, Chief Accountant: Full access to all PAKDs -->
+    <record id="pakd_rule_dtx_manager" model="ir.rule">
+        <field name="name">DTX Managers: All PAKDs</field>
+        <field name="model_id" ref="model_dtx_pakd"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_dtx_ceo')), (4, ref('group_dtx_sales_director')), (4, ref('group_dtx_chief_accountant'))]"/>
+    </record>
+
+    <!-- Sales User: Only PAKDs they own -->
+    <record id="pakd_rule_dtx_sales_user" model="ir.rule">
+        <field name="name">DTX Sales User: Own PAKDs</field>
+        <field name="model_id" ref="model_dtx_pakd"/>
+        <field name="domain_force">[('owner_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_dtx_sales_user'))]"/>
+    </record>
+
+    <!-- Account User: Read all PAKDs -->
+    <record id="pakd_rule_account_user_read" model="ir.rule">
+        <field name="name">Account User: Read All PAKDs</field>
+        <field name="model_id" ref="model_dtx_pakd"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('account.group_account_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- ==========================================
+         DTX.AR.AGING.SUMMARY RECORD RULES
+         ========================================== -->
+
+    <!-- Sales Manager, CEO, Accountant: See all AR aging data -->
+    <record id="ar_aging_summary_rule_manager" model="ir.rule">
+        <field name="name">Managers: All AR Aging Summary</field>
+        <field name="model_id" ref="model_dtx_ar_aging_summary"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_manager')), (4, ref('group_dtx_ceo')), (4, ref('account.group_account_user'))]"/>
+    </record>
+
+    <!-- Sales User: Only see AR aging for their own customers -->
+    <record id="ar_aging_summary_rule_sales_user" model="ir.rule">
+        <field name="name">Sales User: Own Customers AR Aging</field>
+        <field name="model_id" ref="model_dtx_ar_aging_summary"/>
+        <field name="domain_force">['|', ('salesperson_id', '=', user.id), ('salesperson_id', '=', False)]</field>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+
+</odoo>
