@@ -21,18 +21,44 @@
 
 ## 🎯 Làm gì tiếp theo trên MacBook?
 
-### Step 1: Pull code mới
+### Option 1: Restore Database (KHUYÊN DÙNG) ⭐
+
+**Nhanh nhất - Có sẵn database!**
+
 ```bash
-cd ~/dtx_project  # hoặc đường dẫn bạn clone
+# 1. Pull code
+cd ~/dtx_project
 git pull origin main
+
+# 2. Restore database
+cd backups
+./restore-db.sh odoo_db_2026_01_04_pakd_v1.3.0.sql.gz
+
+# 3. Done! Open browser
+open http://localhost:8069
+# Login: admin / admin
 ```
 
-### Step 2: Start Odoo
+**Lợi ích**:
+- ✅ Không cần tạo data
+- ✅ Module đã installed & upgraded
+- ✅ Sẵn sàng test ngay (< 2 phút)
+
+**Chi tiết**: Xem `backups/RESTORE_INSTRUCTIONS.md`
+
+### Option 2: Start từ đầu (nếu muốn)
+
 ```bash
+# 1. Pull code
+cd ~/dtx_project
+git pull origin main
+
+# 2. Start Odoo
 cd odoo-dev
 docker-compose up -d
-# Đợi Odoo khởi động (~30s)
-docker-compose logs odoo --tail=50
+
+# 3. Manual setup
+# Follow MANUAL_UAT_GUIDE.md từ STEP 1
 ```
 
 ### Step 3: Test PAKD formulas
@@ -108,11 +134,29 @@ customer_support_cost = cushion + commission    # ✅ Auto
 - Odoo: Port 8069 ✅
 - DB: PostgreSQL ✅
 - Module: dtx_sales_pakd_contract v1.3.0 ✅
-- Commit: f16de60 ✅
+- DB Backup: odoo_db_2026_01_04_pakd_v1.3.0.sql.gz (1.7 MB) ✅
+- Commits: f16de60, b4daa74, 1cc8ee3 ✅
+
+### Database Credentials:
+**PostgreSQL**:
+- User: `odoo`
+- Password: `odoo`
+- Database: `odoo`
+- Port: 5432
+
+**Odoo Admin**:
+- Username: `admin`
+- Password: `admin`
+- URL: http://localhost:8069
 
 ### MacBook Setup:
 ```bash
-# Just works - arm64 images available
+# Option 1: Restore database (Khuyên dùng)
+cd ~/dtx_project/backups
+./restore-db.sh odoo_db_2026_01_04_pakd_v1.3.0.sql.gz
+
+# Option 2: Start fresh
+cd ~/dtx_project/odoo-dev
 docker-compose up -d
 ```
 
@@ -174,14 +218,26 @@ Row 9: Lợi nhuận        = Row 4 - Row 5 - Row 7
 
 ## 📚 Documentation
 
-**All Files**:
+**Session Files**:
 ```
 SESSION_2026_01_04_PAKD_FORMULA_FIX.md    ← START HERE!
 PAKD_FORMULAS_FIXED.md                    ← User guide
 PAKD_FORMULA_FIX_SUMMARY.md               ← Technical
 PAKD_FORMULA_ANALYSIS.md                  ← Analysis
-MANUAL_UAT_GUIDE.md                       ← Testing
+```
+
+**Testing Guides**:
+```
+MANUAL_UAT_GUIDE.md                       ← Step-by-step testing
 TESTING_COMPLETE_SUMMARY.md               ← Overview
+```
+
+**Database Restore**:
+```
+backups/RESTORE_INSTRUCTIONS.md           ← Chi tiết restore DB
+backups/README.md                         ← Backup overview
+backups/restore-db.sh                     ← Script restore
+backups/backup-db.sh                      ← Script backup
 ```
 
 ---
@@ -189,7 +245,13 @@ TESTING_COMPLETE_SUMMARY.md               ← Overview
 ## 💡 Quick Commands
 
 ```bash
-# Pull & Start
+# Pull & Restore Database (Khuyên dùng)
+cd ~/dtx_project
+git pull origin main
+cd backups
+./restore-db.sh odoo_db_2026_01_04_pakd_v1.3.0.sql.gz
+
+# Or: Pull & Start fresh
 git pull origin main
 cd odoo-dev && docker-compose up -d
 
@@ -201,6 +263,10 @@ docker-compose restart odoo
 
 # Status
 docker-compose ps
+
+# Create new backup
+cd ~/dtx_project/backups
+./backup-db.sh "my_description"
 ```
 
 ---
