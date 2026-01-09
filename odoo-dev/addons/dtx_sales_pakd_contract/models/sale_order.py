@@ -142,6 +142,44 @@ class SaleOrder(models.Model):
     )
 
     # ==========================================
+    # COMMISSION & COSTS TO CUSTOMER/REFERRER
+    # ==========================================
+    x_customer_commission = fields.Monetary(
+        string='Hoa hồng/Chi phí cho KH',
+        currency_field='currency_id',
+        tracking=True,
+        help='Hoa hồng hoặc chi phí khác phải trả cho khách hàng (nếu có)',
+    )
+
+    x_referrer_commission = fields.Monetary(
+        string='Hoa hồng người giới thiệu',
+        currency_field='currency_id',
+        tracking=True,
+        help='Hoa hồng cho người giới thiệu/đại lý (nếu có)',
+    )
+
+    x_total_commission = fields.Monetary(
+        string='Tổng hoa hồng',
+        compute='_compute_total_commission',
+        store=True,
+        help='Tổng hoa hồng = Hoa hồng KH + Hoa hồng người giới thiệu',
+    )
+
+    x_net_profit = fields.Monetary(
+        string='Lãi ròng',
+        compute='_compute_net_profit',
+        store=True,
+        help='Lãi ròng = Lãi - Tổng hoa hồng',
+    )
+
+    x_net_profit_margin = fields.Float(
+        string='Lãi ròng (%)',
+        compute='_compute_net_profit',
+        store=True,
+        help='Tỷ lệ lãi ròng = (Lãi ròng / Doanh thu thực tế) * 100',
+    )
+
+    # ==========================================
     # COMPUTE METHODS
     # ==========================================
     @api.depends('x_contract_scan_attachment_ids')
@@ -189,6 +227,25 @@ class SaleOrder(models.Model):
                 order.x_profit_margin = (order.x_profit / order.x_revenue_actual) * 100
             else:
                 order.x_profit_margin = 0.0
+
+    @api.depends('x_customer_commission', 'x_referrer_commission')
+    def _compute_total_commission(self):
+        """Compute total commission from customer and referrer commissions"""
+        for order in self:
+            order.x_total_commission = (order.x_customer_commission or 0.0) + (order.x_referrer_commission or 0.0)
+
+    @api.depends('x_profit', 'x_total_commission', 'x_revenue_actual')
+    def _compute_net_profit(self):
+        """Compute net profit after deducting commissions"""
+        for order in self:
+            # Net profit = Profit - Total commission
+            order.x_net_profit = order.x_profit - order.x_total_commission
+
+            # Net profit margin % = (Net profit / Revenue actual) * 100
+            if order.x_revenue_actual:
+                order.x_net_profit_margin = (order.x_net_profit / order.x_revenue_actual) * 100
+            else:
+                order.x_net_profit_margin = 0.0
 
     # ==========================================
     # ACTION METHODS
@@ -333,13 +390,34 @@ class SaleOrder(models.Model):
         }
 
     # ==========================================
+    # ADVANCE PAYMENT (TẠM ỨNG)
+    # ==========================================
+    x_advance_amount = fields.Monetary(
+        string='Số tiền tạm ứng',
+        currency_field='currency_id',
+        tracking=True,
+        help='Số tiền khách hàng đã tạm ứng trước cho hợp đồng',
+    )
+
+    x_advance_date = fields.Date(
+        string='Ngày tạm ứng',
+        tracking=True,
+        help='Ngày khách hàng tạm ứng',
+    )
+
+    x_advance_note = fields.Text(
+        string='Ghi chú tạm ứng',
+        help='Ghi chú về khoản tạm ứng (số chứng từ, ngân hàng, etc.)',
+    )
+
+    # ==========================================
     # AR (ACCOUNTS RECEIVABLE) FIELDS
     # ==========================================
     x_ar_residual_total = fields.Monetary(
         string='Còn phải thu',
         compute='_compute_ar_fields',
         store=True,
-        help='Tổng số tiền còn phải thu từ các invoice liên quan',
+        help='Tổng số tiền còn phải thu = Invoiced amount - Paid amount - Advance amount',
     )
 
     x_ar_max_days_overdue = fields.Integer(
@@ -359,10 +437,36 @@ class SaleOrder(models.Model):
         help='Trạng thái công nợ: OK (đã thanh toán hết), Sắp đến hạn (7 ngày tới), Quá hạn',
     )
 
+    # ==========================================
+    # LIFECYCLE STATE TRACKING
+    # ==========================================
+    x_lifecycle_state = fields.Selection([
+        ('quotation', 'Quotation'),
+        ('confirmed', 'Confirmed'),
+        ('working', 'Working'),
+        ('delivered', 'Delivered'),
+        ('invoiced', 'Invoiced'),
+        ('paid', 'Paid'),
+        ('cancelled', 'Cancelled'),
+    ], string='Trạng thái Lifecycle',
+        compute='_compute_lifecycle_state',
+        store=True,
+        help='Trạng thái lifecycle chi tiết của hợp đồng: Quotation → Confirmed → Working → Delivered → Invoiced → Paid',
+    )
+
     @api.depends('invoice_ids.amount_residual', 'invoice_ids.invoice_date_due',
-                 'invoice_ids.invoice_date', 'invoice_ids.state')
+                 'invoice_ids.invoice_date', 'invoice_ids.state', 'x_advance_amount')
     def _compute_ar_fields(self):
-        """Compute AR (Accounts Receivable) fields"""
+        """
+        Compute AR (Accounts Receivable) fields
+
+        Formula: AR Residual = Invoice Residual - Advance Amount
+
+        Logic:
+        1. Get total invoice residual (unpaid amount)
+        2. Subtract advance payment
+        3. If advance > residual, AR = 0 (customer has overpaid)
+        """
         from datetime import date
 
         for order in self:
@@ -374,13 +478,22 @@ class SaleOrder(models.Model):
             )
 
             if not ar_invoices:
-                order.x_ar_residual_total = 0.0
+                # No unpaid invoices
+                # If there's advance payment, it means customer overpaid
+                if order.x_advance_amount > 0:
+                    order.x_ar_residual_total = -order.x_advance_amount  # Negative = customer credit
+                else:
+                    order.x_ar_residual_total = 0.0
                 order.x_ar_max_days_overdue = 0
                 order.x_ar_status = 'ok'
                 continue
 
-            # Total residual
-            order.x_ar_residual_total = sum(ar_invoices.mapped('amount_residual'))
+            # Total invoice residual (unpaid amount from invoices)
+            invoice_residual = sum(ar_invoices.mapped('amount_residual'))
+
+            # Subtract advance payment
+            # If advance > invoice_residual, AR becomes negative (customer has credit)
+            order.x_ar_residual_total = invoice_residual - (order.x_advance_amount or 0.0)
 
             # Max days overdue
             today = date.today()
@@ -397,12 +510,55 @@ class SaleOrder(models.Model):
             order.x_ar_max_days_overdue = max_days
 
             # AR Status
-            if max_days > 0:
+            # If AR <= 0, it means fully paid or overpaid
+            if order.x_ar_residual_total <= 0:
+                order.x_ar_status = 'ok'
+            elif max_days > 0:
                 order.x_ar_status = 'overdue'
             elif min_days_to_due >= -7:  # Due within 7 days
                 order.x_ar_status = 'due_soon'
             else:
                 order.x_ar_status = 'ok'
+
+    @api.depends('state', 'picking_ids.state', 'invoice_ids.state', 'invoice_ids.payment_state')
+    def _compute_lifecycle_state(self):
+        """Compute lifecycle state based on SO state, deliveries, and invoices"""
+        for order in self:
+            if order.state == 'cancel':
+                order.x_lifecycle_state = 'cancelled'
+                continue
+
+            if order.state in ('draft', 'sent'):
+                order.x_lifecycle_state = 'quotation'
+                continue
+
+            # From here, state = 'sale' (confirmed)
+
+            # Check if fully paid
+            posted_invoices = order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.move_type == 'out_invoice')
+            if posted_invoices and all(inv.payment_state == 'paid' for inv in posted_invoices):
+                order.x_lifecycle_state = 'paid'
+                continue
+
+            # Check if has any invoice
+            if posted_invoices:
+                order.x_lifecycle_state = 'invoiced'
+                continue
+
+            # Check if fully delivered
+            pickings = order.picking_ids.filtered(lambda p: p.state not in ('cancel', 'draft'))
+            if pickings:
+                # Check if all pickings are done
+                if all(p.state == 'done' for p in pickings):
+                    order.x_lifecycle_state = 'delivered'
+                    continue
+                else:
+                    # Has pickings but not all done -> working
+                    order.x_lifecycle_state = 'working'
+                    continue
+
+            # Confirmed but no delivery yet
+            order.x_lifecycle_state = 'confirmed'
 
     def action_view_ar_invoices(self):
         """View AR invoices (unpaid/partially paid)"""

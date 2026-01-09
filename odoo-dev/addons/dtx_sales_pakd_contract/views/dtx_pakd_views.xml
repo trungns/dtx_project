@@ -30,7 +30,7 @@
         <field name="name">dtx.pakd.form</field>
         <field name="model">dtx.pakd</field>
         <field name="arch" type="xml">
-            <form string="Phương án kinh doanh">
+            <form string="Phương án kinh doanh" class="o_xxl_form_view">
                 <header>
                     <button name="action_submit" type="object" string="Trình duyệt"
                             class="oe_highlight" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
@@ -57,7 +57,7 @@
                             <field name="end_customer_id" readonly="1"/>
                         </group>
                         <group>
-                            <field name="owner_user_id"/>
+                            <field name="owner_user_id" attrs="{'readonly': [('state', '=', 'approved')]}"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
@@ -65,8 +65,9 @@
 
                     <notebook>
                         <page string="Chi tiết sản phẩm" name="lines">
-                            <field name="line_ids">
-                                <tree string="Chi tiết PAKD" editable="bottom">
+                            <field name="line_ids" widget="one2many" mode="tree" class="o_field_x2many_list"
+                                   attrs="{'readonly': [('state', '=', 'approved')]}">
+                                <tree string="Chi tiết PAKD" editable="bottom" create="1" edit="1" delete="1" default_order="sequence">
                                     <control>
                                         <create string="Add a product"/>
                                         <create string="Add a section" context="{'default_display_type': 'line_section'}"/>
@@ -76,63 +77,90 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="display_type" invisible="1"/>
 
-                                    <!-- Section/Note rendering -->
+                                    <!-- Section/Note rendering - hide by default -->
                                     <field name="name"
                                            widget="section_and_note_text"
-                                           optional="show"/>
+                                           optional="hide"
+                                           width="200px"/>
 
                                     <!-- Normal line fields -->
-                                    <field name="section_type" optional="show"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
                                     <field name="product_id"
                                            attrs="{'invisible': [('display_type', '!=', False)]}"
-                                           options="{'no_create': True}"/>
+                                           options="{'no_create': True}"
+                                           width="250px"/>
                                     <field name="product_code" readonly="1" optional="hide"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="120px"/>
                                     <field name="qty"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="80px"/>
                                     <field name="uom_id" groups="uom.group_uom"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="80px"/>
                                     <field name="product_uom_category_id" invisible="1"/>
 
                                     <!-- Price fields matching Excel -->
                                     <field name="estimate_unit_excl_vat" optional="hide"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="120px"/>
                                     <field name="vendor_list_price" optional="hide"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="120px"/>
                                     <field name="discount_percent" optional="hide"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="100px"/>
                                     <field name="purchase_unit_price"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="130px"/>
                                     <field name="sale_unit_price"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="130px"/>
                                     <field name="contract_unit_price"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="130px"/>
                                     <field name="vat_percent"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="80px"/>
                                     <field name="tax_id" optional="hide"
                                            attrs="{'invisible': [('display_type', '!=', False)]}"
-                                           options="{'no_create': True, 'no_open': True}"/>
+                                           options="{'no_create': True, 'no_open': True}"
+                                           width="100px"/>
 
                                     <!-- Computed totals matching Excel -->
                                     <field name="estimate_total_excl_vat" optional="hide" sum="Tổng DT (chưa VAT)"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="150px"/>
                                     <field name="estimate_total_incl_vat" optional="hide" sum="Tổng DT (có VAT)"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="150px"/>
                                     <field name="purchase_total" sum="Tổng nhập"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
-                                    <field name="sale_total" optional="hide" sum="Tổng bán"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="140px"/>
+                                    <field name="sale_total" optional="show" sum="Tổng bán"
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="140px"
+                                           string="Tổng bán (chi phí thu về)"/>
                                     <field name="contract_total_excl_vat" sum="Tổng HĐ (chưa VAT)"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="160px"/>
                                     <field name="contract_tax_amount" optional="show" sum="Tổng VAT"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="130px"/>
                                     <field name="contract_total_incl_vat" sum="Tổng HĐ (có VAT)"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="160px"/>
                                     <field name="line_profit" sum="Tổng lãi"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="130px"/>
                                     <field name="line_margin_percent" avg="TB margin"
-                                           attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="110px"/>
+
+                                    <!-- Note column at the end -->
+                                    <field name="name" string="Ghi chú"
+                                           attrs="{'invisible': [('display_type', '!=', False)]}"
+                                           width="200px"
+                                           optional="show"/>
 
                                     <field name="currency_id" invisible="1"/>
                                     <field name="company_id" invisible="1"/>
@@ -146,15 +174,15 @@
                                     <field name="total_purchase" widget="monetary"
                                            string="1. Tổng tiền nhập (chi phí đầu vào)"/>
                                     <field name="total_sale" widget="monetary"
-                                           string="2. Tổng tiền bán (chi phí thứ vỡ)"/>
+                                           string="2. Tổng tiền bán (chi phí thu về)"/>
                                 </group>
                                 <group string="Tổng giá hợp đồng">
                                     <field name="total_contract_untaxed" widget="monetary"
-                                           string="3a. Tổng tiền HĐ (chưa VAT)"/>
+                                           string="3a. Tổng tiền HĐ (chưa VAT) = sum(Tổng HĐ chưa VAT từng dòng)"/>
                                     <field name="total_contract_tax" widget="monetary"
-                                           string="3b. Tổng VAT"/>
+                                           string="3b. Tổng VAT = sum(VAT từng dòng)"/>
                                     <field name="total_contract_total" widget="monetary"
-                                           string="3. Tổng tiền HĐ (bao gồm chi phí ghi nêu cả)"
+                                           string="3. Tổng tiền HĐ (có VAT) = 3a + 3b"
                                            class="oe_subtotal_footer_separator"/>
                                 </group>
                             </group>
@@ -163,21 +191,23 @@
                             <group>
                                 <group string="Chi phí từ chênh lệch giá">
                                     <field name="price_diff" widget="monetary"
-                                           string="4. Chênh lệch giá"
+                                           string="4. Chênh lệch giá = 3a - 2"
                                            class="oe_subtotal_footer_separator"/>
-                                    <label for="tax_withheld_percent" string="5. Thu thuế"/>
+                                    <label for="tax_withheld_percent" string="5. Thu thuế = 4 × % thu thuế"/>
                                     <div class="o_row">
-                                        <field name="tax_withheld_percent" class="oe_inline"/> %
+                                        <field name="tax_withheld_percent" class="oe_inline"
+                                               attrs="{'readonly': [('state', '=', 'approved')]}"/> %
                                         <span class="mx-2">=</span>
                                         <field name="tax_withheld_amount" widget="monetary" readonly="1" class="oe_inline"/>
                                     </div>
                                     <field name="cushion_amount" widget="monetary" readonly="1"
-                                           string="6. Tổng gối thêm (= 4 - 5)"/>
+                                           string="6. Tổng gửi thêm (= 4 - 5)"/>
                                 </group>
                                 <group string="Chi phí cho khách hàng">
-                                    <label for="referral_commission_percent" string="7. Hoa hồng"/>
+                                    <label for="referral_commission_percent" string="7. Hoa hồng = 2 × % hoa hồng"/>
                                     <div class="o_row">
-                                        <field name="referral_commission_percent" class="oe_inline"/> %
+                                        <field name="referral_commission_percent" class="oe_inline"
+                                               attrs="{'readonly': [('state', '=', 'approved')]}"/> %
                                         <span class="mx-2">=</span>
                                         <field name="referral_commission" widget="monetary" readonly="1" class="oe_inline"/>
                                     </div>
@@ -194,23 +224,23 @@
                             <group>
                                 <group string="Lợi nhuận dự kiến">
                                     <field name="expected_profit" widget="monetary"
-                                           string="9. Lợi nhuận (= 4 - 5 - 7)"
+                                           string="9. Lợi nhuận (= 2 - 1 - 7)"
                                            class="oe_subtotal_footer_separator"/>
                                     <field name="expected_margin_percent" widget="percentage"
-                                           string="Tỷ lệ lãi (%)"/>
+                                           string="Tỷ lệ lãi (%) = 9 / 3a × 100"/>
                                 </group>
                             </group>
                         </page>
 
                         <page string="Ghi chú" name="notes">
-                            <field name="note" placeholder="Ghi chú nội bộ về phương án này..."/>
+                            <field name="note" placeholder="Ghi chú nội bộ về phương án này..."
+                                   attrs="{'readonly': [('state', '=', 'approved')]}"/>
                         </page>
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
+                <div class="oe_chatter" attrs="{'invisible': [('id', '=', False)]}">
+                    <field name="message_follower_ids" options="{'open_attachments': True}"/>
+                    <field name="message_ids" options="{'display_log_button': True}"/>
                 </div>
             </form>
         </field>
@@ -256,7 +286,7 @@
         <field name="name">Phương án kinh doanh (PAKD)</field>
         <field name="res_model">dtx.pakd</field>
         <field name="view_mode">tree,form</field>
-        <field name="context">{'search_default_my_pakd': 1}</field>
+        <field name="context">{'search_default_my_pakd': 1, 'form_view_ref': 'dtx_sales_pakd_contract.view_dtx_pakd_form'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Tạo phương án kinh doanh (PAKD) mới

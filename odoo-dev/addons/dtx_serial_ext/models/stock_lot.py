@@ -94,7 +94,11 @@ class StockLot(models.Model):
     # ==========================================
     sale_order_ids = fields.Many2many(
         'sale.order',
+        'stock_lot_sale_order_rel',
+        'lot_id',
+        'sale_order_id',
         compute='_compute_sale_orders',
+        store=True,
         string='Sales Orders',
         help='Sales orders that shipped this serial number',
     )
@@ -104,6 +108,19 @@ class StockLot(models.Model):
         compute='_compute_customer_invoices',
         string='Customer Invoices',
         help='Customer invoices linked to sales orders for this serial',
+    )
+
+    customer_invoice_state = fields.Selection(
+        selection=[
+            ('not_invoiced', 'Not Invoiced'),
+            ('invoiced', 'Invoiced'),
+            ('paid', 'Paid'),
+        ],
+        string='Customer Invoice State',
+        compute='_compute_customer_invoice_state',
+        store=True,
+        tracking=True,
+        help='Automatically computed based on customer invoices. "not_invoiced" when no invoice exists, "invoiced" when invoice posted but not paid, "paid" when fully paid.',
     )
 
     customer_invoice_note = fields.Text(
@@ -227,15 +244,65 @@ class StockLot(models.Model):
     def _compute_sale_orders(self):
         """
         Compute sales orders linked to this serial via stock moves
-        Path: stock.lot → stock.move.line → stock.move → sale.order.line → sale.order
-        Note: sale_line_id is only populated on delivery moves (outgoing to customer)
+
+        Supports THREE paths:
+        1. Direct SO line: stock.lot → stock.move.line → stock.move → sale.order.line → sale.order
+        2. BoM kit delivery: stock.lot → stock.move.line → stock.picking → sale.order
+        3. Consumed in production: stock.lot → mrp.production → finished product serial → sale.order
+
+        Path 2 is for BoM kits where components are delivered together (e.g., kit products)
+        Path 3 is for subcontracting/manufacturing where components are consumed in production
+        (e.g., KIOSK10 with components TOUCHSCREEN10, MiniPC10)
         """
         for lot in self:
+            sale_orders = self.env['sale.order']
+
             # Get all stock move lines for this serial
             move_lines = self.env['stock.move.line'].search([('lot_id', '=', lot.id)])
-            # Extract sale orders from moves that have sale_line_id
-            so_lines = move_lines.mapped('move_id.sale_line_id')
-            lot.sale_order_ids = so_lines.mapped('order_id')
+
+            # Path 1: Direct sale line (for products sold directly)
+            # Only if sale_stock module is installed
+            if 'sale_line_id' in self.env['stock.move']._fields:
+                so_lines = move_lines.mapped('move_id.sale_line_id')
+                sale_orders |= so_lines.mapped('order_id')
+
+            # Path 2: Via picking sale_id (for BoM kits delivered together)
+            # This catches kits where components are delivered in same picking as parent
+            # Only if sale_stock module is installed
+            if 'sale_id' in self.env['stock.picking']._fields:
+                pickings = move_lines.mapped('picking_id')
+                sale_orders |= pickings.mapped('sale_id')
+
+            # Path 3: Via production order (for consumed components in manufacturing)
+            # Find production orders where this serial was consumed
+            consumed_moves = move_lines.mapped('move_id').filtered(
+                lambda m: m.raw_material_production_id
+            )
+
+            for move in consumed_moves:
+                production = move.raw_material_production_id
+
+                # Get the finished product serial from this production
+                finished_lot = production.lot_producing_id
+
+                if finished_lot:
+                    # Recursively get sale orders for the finished product
+                    # This handles multi-level BoMs
+                    finished_move_lines = self.env['stock.move.line'].search([
+                        ('lot_id', '=', finished_lot.id)
+                    ])
+
+                    # Path 3a: Finished product sold directly
+                    if 'sale_line_id' in self.env['stock.move']._fields:
+                        finished_so_lines = finished_move_lines.mapped('move_id.sale_line_id')
+                        sale_orders |= finished_so_lines.mapped('order_id')
+
+                    # Path 3b: Finished product delivered via picking
+                    if 'sale_id' in self.env['stock.picking']._fields:
+                        finished_pickings = finished_move_lines.mapped('picking_id')
+                        sale_orders |= finished_pickings.mapped('sale_id')
+
+            lot.sale_order_ids = sale_orders
 
     def _compute_customer_invoices(self):
         """
@@ -260,6 +327,48 @@ class StockLot(models.Model):
                 lot.customer_invoice_ids = invoices
             else:
                 lot.customer_invoice_ids = False
+
+    @api.depends('sale_order_ids', 'sale_order_ids.invoice_ids.state', 'sale_order_ids.invoice_ids.payment_state')
+    def _compute_customer_invoice_state(self):
+        """
+        Automatically compute customer invoice state based on customer invoices
+        - If all invoices are paid → 'paid'
+        - If any invoice posted but not fully paid → 'invoiced'
+        - If no invoices → 'not_invoiced'
+
+        Note: Depends on sale_order_ids and related invoice states
+        to ensure proper recomputation when invoices are created/posted/paid
+        """
+        for lot in self:
+            if lot.sale_order_ids:
+                # Get all SO lines from the sale orders
+                so_lines = lot.sale_order_ids.mapped('order_line')
+
+                # Find invoice lines that reference these SO lines
+                if 'sale_line_ids' in self.env['account.move.line']._fields:
+                    invoice_lines = self.env['account.move.line'].search([
+                        ('sale_line_ids', 'in', so_lines.ids),
+                    ])
+
+                    # Get posted customer invoices
+                    posted_invoices = invoice_lines.mapped('move_id').filtered(
+                        lambda m: m.move_type == 'out_invoice' and m.state == 'posted'
+                    )
+
+                    if posted_invoices:
+                        # Check if all invoices are paid
+                        if all(inv.payment_state == 'paid' for inv in posted_invoices):
+                            lot.customer_invoice_state = 'paid'
+                        else:
+                            lot.customer_invoice_state = 'invoiced'
+                    else:
+                        lot.customer_invoice_state = 'not_invoiced'
+                else:
+                    # sale_stock module not installed
+                    lot.customer_invoice_state = 'not_invoiced'
+            else:
+                # No sale orders linked
+                lot.customer_invoice_state = 'not_invoiced'
 
     # ==========================================
     # SEARCH METHODS

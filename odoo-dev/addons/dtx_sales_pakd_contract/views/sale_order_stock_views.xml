@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         Inherit Sale Order Form: Add Stock Status
+         ========================================== -->
+    <record id="view_order_form_inherit_dtx_stock" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.dtx.stock</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+
+            <!-- Make form wider and chatter smaller -->
+            <xpath expr="//form" position="attributes">
+                <attribute name="class">o_xxl_form_view</attribute>
+            </xpath>
+
+            <!-- Add Smart Buttons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <!-- View Stock Button - always visible -->
+                <button name="action_view_stock_by_product"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-cubes">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Xem kho</span>
+                    </div>
+                </button>
+
+                <!-- Create PO Button - visible when need procurement (even in quotation) -->
+                <button name="action_create_purchase_for_missing"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart"
+                        attrs="{'invisible': [('x_stock_status_summary', '=', 'all_in_stock')]}">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Mua hàng</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Add Stock Status Summary Badge -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="x_stock_status_summary"
+                       widget="badge"
+                       decoration-success="x_stock_status_summary == 'all_in_stock'"
+                       decoration-warning="x_stock_status_summary == 'partial_stock'"
+                       decoration-danger="x_stock_status_summary == 'need_procurement'"/>
+            </xpath>
+
+            <!-- Add Stock Columns to Order Lines -->
+            <xpath expr="//field[@name='order_line']//tree//field[@name='price_subtotal']" position="after">
+                <!-- Hidden field for domain/attrs -->
+                <field name="x_stock_status" invisible="1"/>
+
+                <!-- Qty Available - always visible -->
+                <field name="x_qty_available" string="Tồn kho" optional="show"/>
+
+                <!-- Qty Forecasted - hide by default but can be toggled -->
+                <field name="x_qty_forecasted" string="Dự báo" optional="hide"/>
+
+                <!-- Action button - only for out of stock storable products -->
+                <button name="action_create_po_for_line"
+                        type="object"
+                        string="Mua hàng"
+                        class="btn-link"
+                        icon="fa-shopping-cart"
+                        attrs="{'invisible': ['|', ('x_stock_status', 'not in', ['out_of_stock', 'partial']), ('x_stock_status', '=', 'not_storable')]}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ==========================================
+         Inherit Sale Order Tree: Add Stock Status Icon
+         ========================================== -->
+    <record id="view_order_tree_inherit_dtx_stock" model="ir.ui.view">
+        <field name="name">sale.order.tree.inherit.dtx.stock</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+
+            <!-- Add Stock Status Summary -->
+            <xpath expr="//field[@name='amount_total']" position="after">
+                <field name="x_stock_status_summary"
+                       string="Trạng thái kho"
+                       optional="hide"
+                       widget="badge"
+                       decoration-success="x_stock_status_summary == 'all_in_stock'"
+                       decoration-warning="x_stock_status_summary == 'partial_stock'"
+                       decoration-danger="x_stock_status_summary == 'need_procurement'"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

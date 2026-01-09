@@ -88,6 +88,7 @@ class DtxPakdLine(models.Model):
         string='Đơn vị',
         required=True,
         domain="[('category_id', '=', product_uom_category_id)]",
+        default=lambda self: self.env.ref('uom.product_uom_unit', raise_if_not_found=False),
     )
 
     product_uom_category_id = fields.Many2one(
@@ -245,25 +246,39 @@ class DtxPakdLine(models.Model):
     # ==========================================
     @api.onchange('product_id')
     def _onchange_product_id(self):
-        if self.product_id:
-            # Set default description
+        """
+        Auto-fill fields when product is selected.
+        IMPORTANT: Only for NEW lines (no self.id yet) or when fields are empty.
+        This prevents overwriting user-entered data when reopening saved records.
+        """
+        if not self.product_id:
+            return
+
+        # Set default description if empty
+        if not self.name:
             self.name = self.product_id.get_product_multiline_description_sale()
 
-            # Set default UOM
+        # Set default UOM if not set
+        if not self.uom_id:
             self.uom_id = self.product_id.uom_id.id
 
-            # Set default prices
+        # Set default prices ONLY if they are 0 (not yet set by user)
+        # This prevents overwriting saved data when form is reloaded
+        if not self.estimate_unit_excl_vat:
             self.estimate_unit_excl_vat = self.product_id.list_price
+        if not self.sale_unit_price:
             self.sale_unit_price = self.product_id.list_price
+        if not self.purchase_unit_price:
             self.purchase_unit_price = self.product_id.standard_price
+        if not self.vendor_list_price:
             self.vendor_list_price = self.product_id.list_price
 
-            # Set default tax from product
-            if self.product_id.taxes_id:
-                first_tax = self.product_id.taxes_id[0]
-                self.tax_id = first_tax.id
-                if first_tax.amount_type == 'percent':
-                    self.vat_percent = first_tax.amount
+        # Set default tax from product if not set
+        if self.product_id.taxes_id and not self.tax_id:
+            first_tax = self.product_id.taxes_id[0]
+            self.tax_id = first_tax.id
+            if first_tax.amount_type == 'percent' and not self.vat_percent:
+                self.vat_percent = first_tax.amount
 
     @api.onchange('vendor_list_price', 'discount_percent')
     def _onchange_vendor_list_price(self):
@@ -376,6 +391,30 @@ class DtxPakdLine(models.Model):
                 line.line_margin_percent = (line.line_profit / line.purchase_total) * 100
             else:
                 line.line_margin_percent = 0.0
+
+    # ==========================================
+    # ORM METHODS
+    # ==========================================
+    @api.model
+    def create(self, vals):
+        """
+        Override create to ensure uom_id is always set.
+        If not provided and product_id exists, use product's UOM.
+        If still not set, use default Unit UOM.
+        """
+        # If uom_id not provided, try to get from product
+        if not vals.get('uom_id') and vals.get('product_id'):
+            product = self.env['product.product'].browse(vals['product_id'])
+            if product.uom_id:
+                vals['uom_id'] = product.uom_id.id
+
+        # If still no uom_id, use default Unit
+        if not vals.get('uom_id'):
+            default_uom = self.env.ref('uom.product_uom_unit', raise_if_not_found=False)
+            if default_uom:
+                vals['uom_id'] = default_uom.id
+
+        return super(DtxPakdLine, self).create(vals)
 
     # ==========================================
     # HELPER METHODS

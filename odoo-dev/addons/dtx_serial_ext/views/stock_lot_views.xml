@@ -20,6 +20,10 @@
                        decoration-danger="vendor_invoice_state == 'missing'"
                        decoration-success="vendor_invoice_state == 'linked'"
                        decoration-warning="vendor_invoice_state == 'replaced'"/>
+                <field name="customer_invoice_state" widget="badge"
+                       decoration-danger="customer_invoice_state == 'not_invoiced'"
+                       decoration-warning="customer_invoice_state == 'invoiced'"
+                       decoration-success="customer_invoice_state == 'paid'"/>
                 <field name="purchase_order_ids" widget="many2many_tags" optional="show"/>
                 <field name="sale_order_ids" widget="many2many_tags" optional="show"/>
                 <field name="customer_id" optional="hide"/>
@@ -94,6 +98,11 @@
                                options="{'color_field': 'state', 'no_create': True}"/>
                         <field name="customer_invoice_ids" widget="many2many_tags"
                                options="{'color_field': 'state', 'no_create': True}"/>
+                        <field name="customer_invoice_state" widget="badge"
+                               decoration-danger="customer_invoice_state == 'not_invoiced'"
+                               decoration-warning="customer_invoice_state == 'invoiced'"
+                               decoration-success="customer_invoice_state == 'paid'"
+                               readonly="1"/>
                     </group>
                     <group name="customer_invoice_right">
                         <field name="customer_invoice_note" placeholder="Notes about customer invoice..."/>
@@ -153,10 +162,17 @@
                 <filter string="Maintenance" name="filter_maintenance"
                         domain="[('lifecycle_state', '=', 'maintenance')]"/>
                 <separator/>
-                <filter string="Invoice Missing" name="filter_invoice_missing"
+                <filter string="Vendor Invoice Missing" name="filter_vendor_invoice_missing"
                         domain="[('vendor_invoice_state', '=', 'missing')]"/>
-                <filter string="Invoice Linked" name="filter_invoice_linked"
+                <filter string="Vendor Invoice Linked" name="filter_vendor_invoice_linked"
                         domain="[('vendor_invoice_state', '=', 'linked')]"/>
+                <separator/>
+                <filter string="Not Invoiced to Customer" name="filter_not_invoiced"
+                        domain="[('customer_invoice_state', '=', 'not_invoiced')]"/>
+                <filter string="Invoiced to Customer" name="filter_invoiced"
+                        domain="[('customer_invoice_state', '=', 'invoiced')]"/>
+                <filter string="Paid by Customer" name="filter_paid"
+                        domain="[('customer_invoice_state', '=', 'paid')]"/>
                 <separator/>
                 <filter string="Warranty Active" name="filter_warranty_active"
                         domain="[('warranty_active', '=', True)]"/>
@@ -167,6 +183,8 @@
                             context="{'group_by': 'lifecycle_state'}"/>
                     <filter string="Vendor Invoice State" name="group_vendor_invoice_state"
                             context="{'group_by': 'vendor_invoice_state'}"/>
+                    <filter string="Customer Invoice State" name="group_customer_invoice_state"
+                            context="{'group_by': 'customer_invoice_state'}"/>
                     <filter string="Customer" name="group_customer"
                             context="{'group_by': 'customer_id'}"/>
                 </group>

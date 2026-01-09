@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         Wizard Form View: Create Purchase from SO
+         ========================================== -->
+    <record id="view_create_purchase_wizard_form" model="ir.ui.view">
+        <field name="name">dtx.create.purchase.wizard.form</field>
+        <field name="model">dtx.create.purchase.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Tạo đơn mua hàng">
+                <group>
+                    <group>
+                        <field name="sale_order_id"/>
+                        <field name="vendor_id" placeholder="Chọn nhà cung cấp..."/>
+                    </group>
+                    <group>
+                        <field name="company_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                </group>
+
+                <notebook>
+                    <page string="Sản phẩm cần mua" name="products">
+                        <field name="line_ids">
+                            <tree editable="bottom" create="false" delete="false">
+                                <field name="selected" widget="boolean_toggle"/>
+                                <field name="product_code" optional="show"/>
+                                <field name="product_id"/>
+                                <field name="qty_needed" sum="Tổng cần"/>
+                                <field name="qty_available" sum="Tổng có"/>
+                                <field name="qty_to_order" sum="Tổng mua"/>
+                                <field name="uom_id"/>
+                            </tree>
+                        </field>
+                    </page>
+                    <page string="Ghi chú" name="notes">
+                        <field name="note" placeholder="Ghi chú thêm cho đơn mua hàng..."/>
+                    </page>
+                </notebook>
+
+                <footer>
+                    <button name="action_create_purchase"
+                            string="Tạo đơn mua hàng"
+                            type="object"
+                            class="btn-primary"
+                            data-hotkey="q"/>
+                    <button name="action_cancel"
+                            string="Hủy"
+                            type="object"
+                            class="btn-secondary"
+                            data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         Action: Open Create Purchase Wizard
+         ========================================== -->
+    <record id="action_create_purchase_wizard" model="ir.actions.act_window">
+        <field name="name">Tạo đơn mua hàng</field>
+        <field name="res_model">dtx.create.purchase.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+    </record>
+
+</odoo>

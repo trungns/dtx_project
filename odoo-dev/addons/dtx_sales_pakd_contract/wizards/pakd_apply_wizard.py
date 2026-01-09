@@ -105,7 +105,25 @@ class PakdApplyWizard(models.TransientModel):
 
         # Step 2: Create new lines from PAKD
         new_lines_count = 0
+        skipped_lines_count = 0
         for pakd_line in self.pakd_id.line_ids:
+            # Skip section/note lines
+            if pakd_line.display_type:
+                continue
+
+            # Skip lines without product or uom
+            if not pakd_line.product_id:
+                _logger.warning(f"Skipping PAKD line {pakd_line.id}: no product_id")
+                skipped_lines_count += 1
+                continue
+
+            # Get UOM from pakd_line or fallback to product UOM
+            uom_id = pakd_line.uom_id.id if pakd_line.uom_id else pakd_line.product_id.uom_id.id
+            if not uom_id:
+                _logger.warning(f"Skipping PAKD line {pakd_line.id}: no uom_id for product {pakd_line.product_id.name}")
+                skipped_lines_count += 1
+                continue
+
             # Determine price_unit
             if self.price_source == 'contract':
                 price_unit = pakd_line.contract_unit_price or pakd_line.sale_unit_price
@@ -116,9 +134,9 @@ class PakdApplyWizard(models.TransientModel):
             line_vals = {
                 'order_id': sale_order.id,
                 'product_id': pakd_line.product_id.id,
-                'name': pakd_line.name,
+                'name': pakd_line.name or pakd_line.product_id.get_product_multiline_description_sale(),
                 'product_uom_qty': pakd_line.qty,
-                'product_uom': pakd_line.uom_id.id,
+                'product_uom': uom_id,
                 'price_unit': price_unit,
                 'tax_id': [(6, 0, [pakd_line.tax_id.id])] if pakd_line.tax_id else [(5, 0, 0)],
                 'sequence': pakd_line.sequence,
@@ -128,11 +146,17 @@ class PakdApplyWizard(models.TransientModel):
             new_lines_count += 1
 
         # Step 3: Log message on sale_order
+        body_msg = (
+            f'✅ Đã apply PAKD <a href="#" data-oe-model="dtx.pakd" data-oe-id="{self.pakd_id.id}">{self.pakd_id.name}</a><br/>'
+            f'- Thay thế dòng: {"Có" if self.replace_lines else "Không"}<br/>'
+            f'- Nguồn giá: {dict(self._fields["price_source"].selection).get(self.price_source)}<br/>'
+            f'- Số dòng mới: {new_lines_count}'
+        )
+        if skipped_lines_count > 0:
+            body_msg += f'<br/>⚠️ Bỏ qua {skipped_lines_count} dòng (thiếu sản phẩm hoặc đơn vị tính)'
+
         sale_order.message_post(
-            body=f'✅ Đã apply PAKD <a href="#" data-oe-model="dtx.pakd" data-oe-id="{self.pakd_id.id}">{self.pakd_id.name}</a><br/>'
-                 f'- Thay thế dòng: {"Có" if self.replace_lines else "Không"}<br/>'
-                 f'- Nguồn giá: {dict(self._fields["price_source"].selection).get(self.price_source)}<br/>'
-                 f'- Số dòng mới: {new_lines_count}',
+            body=body_msg,
             subject='Apply PAKD',
         )
 

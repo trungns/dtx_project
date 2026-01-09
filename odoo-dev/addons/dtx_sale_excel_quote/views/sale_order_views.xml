@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sale Order Form to add Export/Import buttons -->
+    <record id="view_order_form_inherit_dtx_excel" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.dtx.excel</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add buttons in Print menu -->
+            <xpath expr="//header/button[@name='action_quotation_send']" position="after">
+                <!-- Export Excel button -->
+                <button name="action_export_excel_dtx"
+                        type="object"
+                        string="Export Excel (Template DTX)"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['draft', 'sent', 'sale'])]}"/>
+
+                <!-- Import Excel button -->
+                <button name="action_import_excel_dtx"
+                        type="object"
+                        string="Import Excel (Template DTX)"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('state', 'not in', ['draft', 'sent'])]}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

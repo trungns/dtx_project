@@ -18,16 +18,41 @@
                        decoration-success="state=='sale'"
                        decoration-info="state in ('draft','sent')"
                        decoration-muted="state=='cancel'"/>
+                <field name="x_lifecycle_state" string="Lifecycle" widget="badge" optional="show"
+                       decoration-info="x_lifecycle_state in ('quotation', 'confirmed')"
+                       decoration-warning="x_lifecycle_state in ('working', 'invoiced')"
+                       decoration-success="x_lifecycle_state in ('delivered', 'paid')"
+                       decoration-muted="x_lifecycle_state=='cancelled'"/>
                 <field name="x_revenue_expected" string="Doanh thu dự kiến" sum="Tổng" optional="show"/>
                 <field name="x_revenue_actual" string="Doanh thu thực tế" sum="Tổng" optional="show"/>
                 <field name="x_payment_date" string="Ngày thanh toán" optional="show"/>
                 <field name="x_total_cost" string="Chi phí" sum="Tổng" optional="show"/>
                 <field name="x_profit" string="Lãi" sum="Tổng" optional="show"/>
                 <field name="x_profit_margin" string="Lãi (%)" avg="Trung bình" optional="show"/>
+                <field name="x_customer_commission" string="HH cho KH" sum="Tổng" optional="hide"/>
+                <field name="x_referrer_commission" string="HH người GT" sum="Tổng" optional="hide"/>
+                <field name="x_total_commission" string="Tổng HH" sum="Tổng" optional="show"/>
+                <field name="x_net_profit" string="Lãi ròng" sum="Tổng" optional="show"
+                       decoration-danger="x_net_profit &lt; 0"
+                       decoration-success="x_net_profit &gt; 0"/>
+                <field name="x_net_profit_margin" string="Lãi ròng (%)" avg="Trung bình" optional="show"
+                       decoration-danger="x_net_profit_margin &lt; 0"
+                       decoration-success="x_net_profit_margin &gt; 0"/>
                 <field name="x_contract_no" string="Hợp đồng số" optional="show"/>
                 <field name="x_signed_date" string="Ngày ký hợp đồng" optional="show"/>
                 <field name="x_contract_end_date" string="Ngày hết hạn HĐ" optional="show"/>
                 <field name="commitment_date" string="Ngày ban giao thực tế" optional="hide"/>
+                <field name="x_advance_amount" string="Tạm ứng" sum="Tổng" optional="show"/>
+                <field name="x_advance_date" string="Ngày tạm ứng" optional="hide"/>
+                <field name="x_ar_residual_total" string="Công nợ" sum="Tổng" optional="show"
+                       decoration-danger="x_ar_residual_total &gt; 0"
+                       decoration-success="x_ar_residual_total &lt; 0"/>
+                <field name="x_ar_max_days_overdue" string="Quá hạn (ngày)" optional="show"
+                       decoration-danger="x_ar_max_days_overdue &gt; 0"/>
+                <field name="x_ar_status" string="Trạng thái AR" optional="show" widget="badge"
+                       decoration-success="x_ar_status == 'ok'"
+                       decoration-warning="x_ar_status == 'due_soon'"
+                       decoration-danger="x_ar_status == 'overdue'"/>
                 <field name="currency_id" invisible="1"/>
             </tree>
         </field>

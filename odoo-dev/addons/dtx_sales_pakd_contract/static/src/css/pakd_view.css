@@ -1,0 +1,51 @@
+/* PAKD Form View - Full Width Layout */
+
+/* Force all modals to be wider */
+.modal-dialog {
+    max-width: 95vw !important;
+}
+
+/* Specifically for PAKD forms */
+.o_form_view.o_xxl_form_view,
+body .o_form_view.o_xxl_form_view {
+    max-width: none !important;
+}
+
+/* Sheet full width */
+.o_form_view.o_xxl_form_view .o_form_sheet_bg,
+.o_form_view.o_xxl_form_view .o_form_sheet {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+/* Notebook full width */
+.o_form_view.o_xxl_form_view .o_notebook,
+.o_form_view.o_xxl_form_view .o_notebook .tab-content {
+    width: 100% !important;
+}
+
+/* Table in one2many field - full width with horizontal scroll */
+.o_form_view.o_xxl_form_view .o_field_x2many_list,
+.o_form_view.o_xxl_form_view .o_field_one2many {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Table itself should expand based on content */
+.o_form_view.o_xxl_form_view .o_field_x2many_list .o_list_table,
+.o_form_view.o_xxl_form_view table.o_list_table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+}
+
+/* Minimize chatter space */
+.o_form_view .oe_chatter {
+    min-height: 50px !important;
+}
+
+/* Modal body scrollable */
+.modal-body {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}

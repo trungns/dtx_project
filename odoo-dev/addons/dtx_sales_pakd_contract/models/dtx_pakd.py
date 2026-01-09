@@ -98,22 +98,22 @@ class DtxPakd(models.Model):
     # ==========================================
     # COMPUTED TOTALS (matching Excel PAKD header)
     # ==========================================
-    # 1) Tổng giá nhập
+    # 1) Tổng giá nhập (chi phí đầu vào)
     total_purchase = fields.Monetary(
         string='Tổng giá nhập',
         compute='_compute_totals',
         store=True,
         currency_field='currency_id',
-        help='= sum(line.purchase_total)',
+        help='1. Tổng tiền nhập (chi phí đầu vào) = sum(line.purchase_total)',
     )
 
-    # 2) Tổng giá bán
+    # 2) Tổng giá bán (chi phí thu về)
     total_sale = fields.Monetary(
         string='Tổng giá bán',
         compute='_compute_totals',
         store=True,
         currency_field='currency_id',
-        help='= sum(line.sale_total)',
+        help='2. Tổng tiền bán (chi phí thu về) = sum(line.sale_total)',
     )
 
     # 3) Tổng giá HĐ (chưa VAT)
@@ -122,7 +122,7 @@ class DtxPakd(models.Model):
         compute='_compute_totals',
         store=True,
         currency_field='currency_id',
-        help='= sum(line.contract_total_excl_vat)',
+        help='3a. Tổng tiền HĐ (chưa VAT) = sum(line.contract_total_excl_vat)',
     )
 
     # 4) Tổng VAT HĐ (simple sum from lines, không dùng tax engine)
@@ -131,7 +131,7 @@ class DtxPakd(models.Model):
         compute='_compute_totals',
         store=True,
         currency_field='currency_id',
-        help='= sum(line.contract_total_excl_vat × vat_percent/100)',
+        help='3b. Tổng VAT = sum(line.contract_total_excl_vat × vat_percent/100)',
     )
 
     # 5) Tổng giá HĐ (có VAT)
@@ -140,7 +140,7 @@ class DtxPakd(models.Model):
         compute='_compute_totals',
         store=True,
         currency_field='currency_id',
-        help='= total_contract_untaxed + total_contract_tax',
+        help='3. Tổng tiền HĐ (bao gồm chi phí gửi nếu có) = 3a + 3b',
     )
 
     # 6) Chênh lệch giá
@@ -149,7 +149,7 @@ class DtxPakd(models.Model):
         compute='_compute_totals',
         store=True,
         currency_field='currency_id',
-        help='= total_sale - total_purchase',
+        help='4. Chênh lệch giá = Tổng tiền HĐ chưa VAT (3a) - Tổng tiền bán (2)',
     )
 
     # ==========================================
@@ -166,21 +166,21 @@ class DtxPakd(models.Model):
         compute='_compute_business_costs',
         store=True,
         currency_field='currency_id',
-        help='= price_diff × (tax_withheld_percent/100)',
+        help='5. Thu thuế = Chênh lệch giá (4) × (% thu thuế / 100)',
     )
 
     cushion_amount = fields.Monetary(
-        string='Tổng gối thêm',
+        string='Tổng gửi thêm',
         compute='_compute_business_costs',
         store=True,
         currency_field='currency_id',
-        help='= price_diff - tax_withheld_amount (Số tiền còn lại sau khi thu thuế)',
+        help='6. Tổng gửi thêm = Chênh lệch giá (4) - Thu thuế (5)',
     )
 
     referral_commission_percent = fields.Float(
         string='Tỷ lệ hoa hồng (%)',
         default=0.0,
-        help='Tỷ lệ hoa hồng từ tổng tiền HĐ chưa VAT (thường 3%), nhập tay',
+        help='Tỷ lệ hoa hồng từ tổng tiền bán (thường 3%), nhập tay',
     )
 
     referral_commission = fields.Monetary(
@@ -188,7 +188,7 @@ class DtxPakd(models.Model):
         compute='_compute_business_costs',
         store=True,
         currency_field='currency_id',
-        help='= total_contract_untaxed × (referral_commission_percent/100)',
+        help='7. Hoa hồng = Tổng tiền bán - chi phí thu về (2) × (% hoa hồng / 100)',
     )
 
     customer_support_cost = fields.Monetary(
@@ -196,7 +196,7 @@ class DtxPakd(models.Model):
         compute='_compute_business_costs',
         store=True,
         currency_field='currency_id',
-        help='= cushion_amount + referral_commission (Tổng gối thêm + Hoa hồng)',
+        help='8. Tổng chi phí cho khách = Tổng gửi thêm (6) + Hoa hồng (7)',
     )
 
     business_cost_total = fields.Monetary(
@@ -204,7 +204,7 @@ class DtxPakd(models.Model):
         compute='_compute_business_costs',
         store=True,
         currency_field='currency_id',
-        help='= tax_withheld_amount + customer_support_cost',
+        help='Tổng chi phí KD = Thu thuế (5) + Tổng chi phí cho khách (8)',
     )
 
     # ==========================================
@@ -215,14 +215,14 @@ class DtxPakd(models.Model):
         compute='_compute_business_costs',
         store=True,
         currency_field='currency_id',
-        help='= total_contract_untaxed - total_purchase - business_cost_total',
+        help='9. Lợi nhuận = Tổng tiền bán (2) - Tổng tiền nhập (1) - Hoa hồng (7)',
     )
 
     expected_margin_percent = fields.Float(
         string='Tỷ lệ lãi (%)',
         compute='_compute_business_costs',
         store=True,
-        help='= (expected_profit / total_contract_untaxed) × 100',
+        help='Tỷ lệ lãi = (Lợi nhuận (9) / Tổng tiền HĐ chưa VAT (3a)) × 100',
     )
 
     # ==========================================
@@ -243,61 +243,63 @@ class DtxPakd(models.Model):
             # Filter out section/note lines
             normal_lines = pakd.line_ids.filtered(lambda l: not l.display_type)
 
-            # 1) Tổng giá nhập
+            # 1) Tổng giá nhập (chi phí đầu vào)
             pakd.total_purchase = sum(normal_lines.mapped('purchase_total'))
 
-            # 2) Tổng giá bán
+            # 2) Tổng giá bán (chi phí thu về)
             pakd.total_sale = sum(normal_lines.mapped('sale_total'))
 
-            # 3) Tổng giá HĐ (chưa VAT)
+            # 3a) Tổng giá HĐ (chưa VAT)
             pakd.total_contract_untaxed = sum(normal_lines.mapped('contract_total_excl_vat'))
 
-            # 4) Tổng VAT HĐ (simple sum from line computed values)
+            # 3b) Tổng VAT HĐ (simple sum from line computed values)
             pakd.total_contract_tax = sum(normal_lines.mapped('contract_tax_amount'))
 
-            # 5) Tổng giá HĐ (có VAT)
+            # 3) Tổng giá HĐ (có VAT) = 3a + 3b
             pakd.total_contract_total = pakd.total_contract_untaxed + pakd.total_contract_tax
 
-            # 6) Chênh lệch giá
-            pakd.price_diff = pakd.total_sale - pakd.total_purchase
+            # 4) Chênh lệch giá = Tổng HĐ chưa VAT (3a) - Tổng bán (2)
+            pakd.price_diff = pakd.total_contract_untaxed - pakd.total_sale
 
-    @api.depends('price_diff', 'total_contract_untaxed', 'total_purchase',
+    @api.depends('price_diff', 'total_sale', 'total_contract_untaxed', 'total_purchase',
                  'tax_withheld_percent', 'referral_commission_percent')
     def _compute_business_costs(self):
         """
         Compute business costs and profit matching Excel PAKD formulas.
 
-        Excel PAKD structure:
+        CÔNG THỨC:
         1. Tổng tiền nhập (chi phí đầu vào) = total_purchase
-        2. Tổng tiền bán (chi phí thứ vỡ) = total_sale
-        3. Tổng tiền Hợp đồng = total_contract_total
-        4. Chênh lệch giá = price_diff = total_sale - total_purchase
-        5. Thu thuế X% = price_diff × tax_withheld_percent
-        6. Tổng gối thêm = price_diff - thu thuế
-        7. Hoa hồng Y% = total_contract_untaxed × referral_commission_percent
-        8. Tổng chi phí cho khách = Tổng gối thêm + Hoa hồng
-        9. Lợi nhuận = price_diff - thu thuế - hoa hồng
+        2. Tổng tiền bán (chi phí thu về) = total_sale
+        3. Tổng tiền Hợp đồng (bao gồm chi phí gửi nếu có) = total_contract_untaxed + total_contract_tax
+           3a. chưa VAT = total_contract_untaxed
+           3b. VAT = total_contract_tax
+        4. Chênh lệch giá = 3a - 2
+        5. Thu thuế = 4 × %
+        6. Tổng gửi thêm = 4 - 5
+        7. Hoa hồng = 2 × %
+        8. Tổng chi phí cho khách = 6 + 7
+        9. Lợi nhuận = 2 - 1 - 7
+        Tỷ lệ lãi = (9 / 3a) × 100
         """
         for pakd in self:
             currency = pakd.currency_id or pakd.company_id.currency_id
 
-            # 5) Thu thuế = price_diff × (tax_withheld_percent/100)
-            # Base is chênh lệch giá (not total_contract_untaxed!)
+            # 5) Thu thuế = Chênh lệch giá × (tax_withheld_percent/100)
             pakd.tax_withheld_amount = currency.round(
                 pakd.price_diff * (pakd.tax_withheld_percent / 100)
             )
 
-            # 6) Tổng gối thêm = price_diff - tax_withheld_amount
+            # 6) Tổng gửi thêm = Chênh lệch giá - Thu thuế
             pakd.cushion_amount = currency.round(
                 pakd.price_diff - pakd.tax_withheld_amount
             )
 
-            # 7) Hoa hồng = total_contract_untaxed × (referral_commission_percent/100)
+            # 7) Hoa hồng = Tổng bán (chi phí thu về) × (referral_commission_percent/100)
             pakd.referral_commission = currency.round(
-                pakd.total_contract_untaxed * (pakd.referral_commission_percent / 100)
+                pakd.total_sale * (pakd.referral_commission_percent / 100)
             )
 
-            # 8) Tổng chi phí cho khách = Tổng gối thêm + Hoa hồng
+            # 8) Tổng chi phí cho khách = Tổng gửi thêm + Hoa hồng
             pakd.customer_support_cost = currency.round(
                 pakd.cushion_amount + pakd.referral_commission
             )
@@ -307,15 +309,15 @@ class DtxPakd(models.Model):
                 pakd.tax_withheld_amount + pakd.customer_support_cost
             )
 
-            # 9) Lợi nhuận = price_diff - thu thuế - hoa hồng
-            # Or equivalently: total_contract_untaxed - total_purchase - business_cost_total
+            # 9) Lợi nhuận = Tổng bán - Tổng nhập - Hoa hồng
             pakd.expected_profit = currency.round(
-                pakd.price_diff - pakd.tax_withheld_amount - pakd.referral_commission
+                pakd.total_sale - pakd.total_purchase - pakd.referral_commission
             )
 
             # Tỷ lệ lãi % = (Lợi nhuận / Tổng tiền HĐ chưa VAT) × 100
+            # Note: Widget percentage sẽ tự động × 100, nên không nhân ở đây
             if pakd.total_contract_untaxed:
-                pakd.expected_margin_percent = (pakd.expected_profit / pakd.total_contract_untaxed) * 100
+                pakd.expected_margin_percent = pakd.expected_profit / pakd.total_contract_untaxed
             else:
                 pakd.expected_margin_percent = 0.0
 
@@ -327,6 +329,46 @@ class DtxPakd(models.Model):
         if vals.get('name', _('New')) == _('New'):
             vals['name'] = self.env['ir.sequence'].next_by_code('dtx.pakd') or _('New')
         return super(DtxPakd, self).create(vals)
+
+    def write(self, vals):
+        """
+        Override write to prevent Sales Users from editing approved PAKDs.
+        Only CEO and Sales Director can edit approved PAKDs.
+        """
+        for pakd in self:
+            # Check if PAKD is approved
+            if pakd.state == 'approved':
+                # Check if user is CEO or Sales Director
+                is_ceo = self.env.user.has_group('dtx_sales_pakd_contract.group_dtx_ceo')
+                is_sales_director = self.env.user.has_group('dtx_sales_pakd_contract.group_dtx_sales_director')
+
+                if not (is_ceo or is_sales_director):
+                    raise UserError(
+                        'PAKD đã được duyệt không thể chỉnh sửa.\n'
+                        'Chỉ CEO hoặc Giám đốc Kinh doanh mới có quyền sửa PAKD đã duyệt.'
+                    )
+
+        return super(DtxPakd, self).write(vals)
+
+    def unlink(self):
+        """
+        Override unlink to prevent Sales Users from deleting approved PAKDs.
+        Only CEO and Sales Director can delete approved PAKDs.
+        """
+        for pakd in self:
+            # Check if PAKD is approved
+            if pakd.state == 'approved':
+                # Check if user is CEO or Sales Director
+                is_ceo = self.env.user.has_group('dtx_sales_pakd_contract.group_dtx_ceo')
+                is_sales_director = self.env.user.has_group('dtx_sales_pakd_contract.group_dtx_sales_director')
+
+                if not (is_ceo or is_sales_director):
+                    raise UserError(
+                        'PAKD đã được duyệt không thể xóa.\n'
+                        'Chỉ CEO hoặc Giám đốc Kinh doanh mới có quyền xóa PAKD đã duyệt.'
+                    )
+
+        return super(DtxPakd, self).unlink()
 
     # ==========================================
     # ACTION METHODS
