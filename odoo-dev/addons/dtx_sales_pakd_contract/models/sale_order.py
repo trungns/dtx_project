@@ -270,6 +270,14 @@ class SaleOrder(models.Model):
         """Create new PAKD from Sales Order lines"""
         self.ensure_one()
 
+        # Check if there are any product lines
+        product_lines = self.order_line.filtered(lambda l: not l.display_type and l.product_id)
+        if not product_lines:
+            raise UserError(
+                'Báo giá không có sản phẩm nào để tạo PAKD.\n'
+                'Hãy thêm sản phẩm vào báo giá trước khi tạo PAKD.'
+            )
+
         # Create PAKD
         pakd = self.env['dtx.pakd'].create({
             'sale_order_id': self.id,
@@ -282,6 +290,11 @@ class SaleOrder(models.Model):
         for line in self.order_line:
             if line.display_type:
                 # Skip section/note lines
+                continue
+
+            # Skip lines without product
+            if not line.product_id:
+                _logger.warning(f"Skipping sale.order.line {line.id}: no product_id")
                 continue
 
             # Map tax_id to vat_percent
@@ -360,11 +373,19 @@ class SaleOrder(models.Model):
         # Create contract costs from PAKD lines
         sequence = 10
         for pakd_line in pakd.line_ids:
+            # Skip section/note lines
+            if pakd_line.display_type:
+                continue
+
+            # Skip lines without product or uom
+            if not pakd_line.product_id or not pakd_line.uom_id:
+                continue
+
             self.env['dtx.contract.cost'].create({
                 'sale_order_id': self.id,
                 'sequence': sequence,
                 'product_id': pakd_line.product_id.id,
-                'name': pakd_line.name,
+                'name': pakd_line.name or pakd_line.product_id.display_name,
                 'qty': pakd_line.qty,
                 'uom_id': pakd_line.uom_id.id,
                 'planned_unit_cost': pakd_line.purchase_unit_price,

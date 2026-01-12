@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Sales PAKD Contract',
-    'version': '16.0.1.3.0',
+    'version': '16.0.1.4.0',
     'category': 'Sales',
     'summary': 'Phương Án Kinh Doanh (PAKD) và quản lý hợp đồng cho Sales Order',
     'description': """
@@ -24,6 +24,13 @@ Tính năng chính:
 - UI gọn nhẹ, ẩn field không dùng cho DTX
 - Upload file scan hợp đồng (PDF/JPG)
 - Tương thích data cũ, không phá workflow core
+
+Version 1.4.0:
+- **FIX**: Allow CEO and GDKD to edit approved PAKD (remove view readonly attrs)
+- **FIX**: Skip section/note lines in import_pakd_costs (prevent errors)
+- **FIX**: Better validation in action_create_pakd (check for product lines)
+- **FEATURE**: Add commission tracking (x_customer_commission, x_referrer_commission)
+- **FEATURE**: Add net profit fields (x_net_profit, x_net_profit_margin)
 
 Version 1.3.0:
 - **CRITICAL FIX**: PAKD formulas now match Excel template exactly
