@@ -99,6 +99,16 @@ class StockMoveLine(models.Model):
                     )
                 elif new_state:
                     _logger.debug("DTX Serial: Lot %s already in state '%s', no update needed", lot.name, new_state)
+
+                # Also update x_lifecycle_state (auto computed based on location)
+                if hasattr(lot, 'x_lifecycle_state'):
+                    try:
+                        lot._compute_x_lifecycle_state()
+                        _logger.info("DTX Serial: Updated x_lifecycle_state for lot %s to '%s'",
+                                   lot.name, lot.x_lifecycle_state)
+                    except Exception as e:
+                        _logger.error("DTX Serial: Error updating x_lifecycle_state for lot %s: %s",
+                                    lot.name, str(e), exc_info=True)
             except Exception as e:
                 _logger.error("DTX Serial: Error updating lifecycle state for lot %s: %s",
                              lot.name if lot else 'Unknown', str(e), exc_info=True)

@@ -26,11 +26,26 @@ class StockLot(models.Model):
             ('maintenance', 'Under Maintenance'),
             ('scrapped', 'Scrapped'),
         ],
-        string='Lifecycle State',
+        string='Lifecycle State (Manual)',
         default='stock',
         required=True,
         tracking=True,
-        help='Current lifecycle status of the device',
+        help='Manual lifecycle status of the device',
+    )
+
+    x_lifecycle_state = fields.Selection(
+        selection=[
+            ('in_stock', 'In Stock'),
+            ('subcontracted', 'At Subcontractor'),
+            ('in_production', 'In Production'),
+            ('delivered', 'Delivered to Customer'),
+            ('maintenance', 'Under Maintenance'),
+            ('scrapped', 'Scrapped'),
+        ],
+        string='Lifecycle State (Auto)',
+        compute='_compute_x_lifecycle_state',
+        store=True,
+        help='Automatically computed based on current location',
     )
 
     # ==========================================
@@ -159,6 +174,65 @@ class StockLot(models.Model):
     # ==========================================
     # COMPUTED FIELDS
     # ==========================================
+    def _compute_x_lifecycle_state(self):
+        """
+        Compute lifecycle state based on current location of the serial number.
+
+        Logic:
+        - Get quants for this serial with qty > 0
+        - Check location type and usage to determine state:
+          - Internal (WH/Stock/*) → 'in_stock'
+          - Subcontracting location → 'subcontracted'
+          - Production location → 'in_production'
+          - Customer location → 'delivered'
+          - Scrap location → 'scrapped'
+          - Maintenance location (custom) → 'maintenance'
+        """
+        for lot in self:
+            # Get stock quants for this serial with positive quantity
+            quants = self.env['stock.quant'].search([
+                ('lot_id', '=', lot.id),
+                ('quantity', '>', 0),
+            ])
+
+            if not quants:
+                # No stock, assume delivered or scrapped
+                lot.x_lifecycle_state = 'in_stock'
+                continue
+
+            # Get the location with most quantity (in case split across locations)
+            main_quant = quants.sorted(key=lambda q: q.quantity, reverse=True)[0]
+            location = main_quant.location_id
+
+            # Determine state based on location
+            if location.usage == 'internal':
+                # Check if it's subcontracting location
+                if 'subcontracting' in location.complete_name.lower():
+                    lot.x_lifecycle_state = 'subcontracted'
+                # Check if it's production location
+                elif location.location_id and location.location_id.usage == 'production':
+                    lot.x_lifecycle_state = 'in_production'
+                # Check if it's maintenance location
+                elif 'maintenance' in location.complete_name.lower():
+                    lot.x_lifecycle_state = 'maintenance'
+                # Regular stock
+                else:
+                    lot.x_lifecycle_state = 'in_stock'
+
+            elif location.usage == 'customer':
+                lot.x_lifecycle_state = 'delivered'
+
+            elif location.usage == 'inventory':
+                # Scrap location
+                lot.x_lifecycle_state = 'scrapped'
+
+            elif location.usage == 'production':
+                lot.x_lifecycle_state = 'in_production'
+
+            else:
+                # Default to in_stock for other cases
+                lot.x_lifecycle_state = 'in_stock'
+
     @api.depends('warranty_start', 'warranty_end')
     def _compute_warranty_active(self):
         """Check if warranty is currently active based on dates"""

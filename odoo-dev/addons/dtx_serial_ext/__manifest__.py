@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Serial Extension',
-    'version': '16.0.2.2.0',
+    'version': '16.0.2.3.0',
     'category': 'Inventory/Inventory',
     'summary': 'Extended serial/lot tracking for DTX device lifecycle management',
     'description': """
@@ -17,6 +17,14 @@ Extends stock.lot (serial/lot numbers) with:
 - Manual replacement invoice linking for special cases
 - Warranty period tracking
 - Google Drive link for device documentation
+
+Version 2.3.0:
+- **NEW**: Auto-computed lifecycle state based on current location
+- **NEW**: x_lifecycle_state field tracks location-based state
+- States: in_stock, subcontracted, in_production, delivered, maintenance, scrapped
+- Automatically updated when serial moves between locations
+- Shown in tree/form views with color badges
+- **FIX**: Subcontracted serials now show correct state
 
 Version 2.2.0:
 - NEW: Replacement Invoice field for manual bill linking

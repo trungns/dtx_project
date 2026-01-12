@@ -11,11 +11,18 @@
             <!-- Add DTX fields to tree view -->
             <xpath expr="//field[@name='name']" position="after">
                 <field name="dtx_serial_internal"/>
-                <field name="lifecycle_state" widget="badge"
+                <field name="x_lifecycle_state" string="Location State" widget="badge"
+                       decoration-success="x_lifecycle_state == 'in_stock'"
+                       decoration-info="x_lifecycle_state == 'delivered'"
+                       decoration-warning="x_lifecycle_state in ('subcontracted', 'in_production', 'maintenance')"
+                       decoration-danger="x_lifecycle_state == 'scrapped'"
+                       optional="show"/>
+                <field name="lifecycle_state" string="Manual State" widget="badge"
                        decoration-success="lifecycle_state in ('stock', 'installed')"
                        decoration-info="lifecycle_state == 'allocated'"
                        decoration-warning="lifecycle_state == 'maintenance'"
-                       decoration-danger="lifecycle_state == 'scrapped'"/>
+                       decoration-danger="lifecycle_state == 'scrapped'"
+                       optional="hide"/>
                 <field name="vendor_invoice_state" widget="badge"
                        decoration-danger="vendor_invoice_state == 'missing'"
                        decoration-success="vendor_invoice_state == 'linked'"
@@ -60,7 +67,13 @@
 
                     <!-- Right column: Lifecycle & References -->
                     <group name="lifecycle_info" string="Lifecycle &amp; References">
-                        <field name="lifecycle_state" widget="badge"
+                        <field name="x_lifecycle_state" string="Current Location State" widget="badge"
+                               decoration-success="x_lifecycle_state == 'in_stock'"
+                               decoration-info="x_lifecycle_state == 'delivered'"
+                               decoration-warning="x_lifecycle_state in ('subcontracted', 'in_production', 'maintenance')"
+                               decoration-danger="x_lifecycle_state == 'scrapped'"
+                               readonly="1"/>
+                        <field name="lifecycle_state" string="Manual State" widget="badge"
                                decoration-success="lifecycle_state in ('stock', 'installed')"
                                decoration-info="lifecycle_state == 'allocated'"
                                decoration-warning="lifecycle_state == 'maintenance'"
