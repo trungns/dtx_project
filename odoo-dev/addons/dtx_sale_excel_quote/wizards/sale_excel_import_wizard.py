@@ -153,21 +153,51 @@ class SaleExcelImportWizard(models.TransientModel):
                 # Find product by code
                 product = None
                 if col_c:
+                    # Clean product code: remove all whitespace
+                    product_code_cleaned = ''.join(str(col_c).split())
+
+                    # Try exact match first
                     product = self.env['product.product'].search([
                         ('default_code', '=', str(col_c).strip())
                     ], limit=1)
 
+                    # Try with cleaned code (no spaces)
                     if not product:
-                        # Try fuzzy search by name
+                        product = self.env['product.product'].search([
+                            ('default_code', '=', product_code_cleaned)
+                        ], limit=1)
+
+                    # Try case-insensitive match
+                    if not product:
+                        product = self.env['product.product'].search([
+                            ('default_code', '=ilike', str(col_c).strip())
+                        ], limit=1)
+
+                    # Try fuzzy search by name
+                    if not product:
                         product = self.env['product.product'].search([
                             ('name', 'ilike', str(col_c).strip())
                         ], limit=1)
 
                 if not product:
-                    raise ValidationError(
-                        f'Không tìm thấy sản phẩm với mã "{col_c}" tại dòng {row_idx}.\n'
-                        f'Vui lòng kiểm tra mã sản phẩm trong hệ thống.'
-                    )
+                    # Suggest similar products
+                    similar_products = self.env['product.product'].search([
+                        ('default_code', 'ilike', str(col_c).strip()[:5])
+                    ], limit=5)
+
+                    error_msg = f'Không tìm thấy sản phẩm với mã "{col_c}" tại dòng {row_idx}.\n'
+
+                    if similar_products:
+                        error_msg += '\nGợi ý các sản phẩm tương tự:\n'
+                        for p in similar_products:
+                            error_msg += f'  - [{p.default_code}] {p.name}\n'
+                    else:
+                        error_msg += '\nVui lòng kiểm tra mã sản phẩm trong hệ thống.\n'
+                        error_msg += f'Mã đã thử:\n'
+                        error_msg += f'  - Exact: "{str(col_c).strip()}"\n'
+                        error_msg += f'  - No spaces: "{product_code_cleaned}"\n'
+
+                    raise ValidationError(error_msg)
 
                 line_vals['product_id'] = product.id
                 line_vals['name'] = col_b or product.display_name

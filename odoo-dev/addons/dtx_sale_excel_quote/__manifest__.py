@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Sale Excel Quotation',
-    'version': '16.0.1.0.0',
+    'version': '16.0.1.1.0',
     'category': 'Sales',
     'summary': 'Export/Import Sale Quotations using DTX Excel Template',
     'description': """
@@ -21,6 +21,12 @@ Template Structure:
 - Header: Company info, Customer info, Sales info
 - Product table: STT | MÔ TẢ | MÃ SP | XUẤT XỨ | ĐVT | SL | ĐƠN GIÁ | VAT | TỔNG GIÁ | THÀNH TIỀN
 - Footer: Totals with formulas
+
+Version 1.1.0:
+- **FIX**: Improved product code matching with multiple fallback strategies
+- **FIX**: Handle product codes with extra spaces (e.g., "SEQMS- BrA" → "SEQMS-BrA")
+- **FIX**: Better error messages with similar product suggestions
+- Try 4 matching strategies: exact, cleaned (no spaces), case-insensitive, fuzzy name search
 
 Version 1.0.0:
 - Initial release
