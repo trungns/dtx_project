@@ -197,29 +197,31 @@ class SaleOrder(models.Model):
         for order in self:
             order.contract_cost_count = len(order.contract_cost_ids)
 
-    @api.depends('amount_untaxed', 'invoice_ids.payment_state', 'invoice_ids.amount_untaxed', 'invoice_ids.date', 'contract_cost_ids.actual_total')
+    @api.depends('amount_untaxed', 'invoice_ids.payment_state', 'invoice_ids.amount_untaxed', 'invoice_ids.date',
+                 'contract_cost_ids.total_purchase', 'contract_cost_ids.total_sale')
     def _compute_contract_financials(self):
         """Compute contract financial fields"""
         for order in self:
             # Revenue expected = SO amount_untaxed
             order.x_revenue_expected = order.amount_untaxed
 
-            # Revenue actual = sum of paid invoices
+            # Revenue actual = sum of total_sale from contract costs (actual revenue per line)
+            # This reflects actual sale prices which may differ from SO
+            order.x_revenue_actual = sum(order.contract_cost_ids.mapped('total_sale'))
+
+            # Payment date = latest payment date from paid invoices
             paid_invoices = order.invoice_ids.filtered(
                 lambda inv: inv.payment_state == 'paid' and inv.move_type == 'out_invoice'
             )
-            order.x_revenue_actual = sum(paid_invoices.mapped('amount_untaxed'))
-
-            # Payment date = latest payment date
             if paid_invoices:
                 order.x_payment_date = max(paid_invoices.mapped('date'))
             else:
                 order.x_payment_date = False
 
-            # Total cost = sum of actual costs from contract_cost_ids
-            order.x_total_cost = sum(order.contract_cost_ids.mapped('actual_total'))
+            # Total cost = sum of total_purchase from contract costs (actual purchase cost per line)
+            order.x_total_cost = sum(order.contract_cost_ids.mapped('total_purchase'))
 
-            # Profit = Revenue actual - Total cost
+            # Profit = Revenue actual - Total cost (before commission)
             order.x_profit = order.x_revenue_actual - order.x_total_cost
 
             # Profit margin % = (Profit / Revenue actual) * 100

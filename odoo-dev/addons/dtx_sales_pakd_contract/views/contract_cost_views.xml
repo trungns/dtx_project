@@ -5,19 +5,47 @@
         <field name="name">dtx.contract.cost.tree</field>
         <field name="model">dtx.contract.cost</field>
         <field name="arch" type="xml">
-            <tree string="Chi phí hợp đồng" editable="bottom" decoration-danger="cost_type=='additional'">
+            <tree string="Chi phí hợp đồng" editable="bottom"
+                  decoration-danger="cost_type=='additional'"
+                  decoration-success="profit > 0 and cost_type=='planned'"
+                  decoration-warning="profit &lt; 0">
                 <field name="sequence" widget="handle"/>
                 <field name="product_id"/>
                 <field name="name"/>
                 <field name="qty"/>
                 <field name="uom_id" groups="uom.group_uom"/>
-                <field name="planned_unit_cost" readonly="1"/>
-                <field name="actual_unit_cost"/>
-                <field name="planned_total" readonly="1" sum="Tổng dự kiến"/>
-                <field name="actual_total" readonly="1" sum="Tổng thực tế"/>
-                <field name="variance" readonly="1" sum="Chênh lệch"/>
+
+                <!-- Purchase Price Section -->
+                <field name="planned_unit_cost" readonly="1" optional="hide"/>
+                <field name="purchase_unit_price"
+                       readonly="1"
+                       attrs="{'column_invisible': [('parent.state', '=', 'draft')]}"
+                       decoration-info="has_purchase_order"/>
+                <field name="purchase_unit_price_manual"
+                       attrs="{'column_invisible': [('parent.state', '=', 'draft')], 'readonly': [('has_purchase_order', '=', True)]}"/>
+                <field name="has_purchase_order" invisible="1"/>
+
+                <!-- Sale Price Section -->
+                <field name="sale_unit_price"/>
+
+                <!-- Totals Section -->
+                <field name="total_purchase" readonly="1" sum="Tổng mua"/>
+                <field name="total_sale" readonly="1" sum="Tổng bán"/>
+
+                <!-- Profit Section -->
+                <field name="profit" readonly="1" sum="Lợi nhuận"
+                       decoration-success="profit > 0"
+                       decoration-danger="profit &lt; 0"/>
+                <field name="margin_percent" readonly="1" widget="percentage"/>
+
+                <!-- Legacy fields (hidden) -->
+                <field name="planned_total" readonly="1" optional="hide" sum="Tổng dự kiến"/>
+                <field name="actual_total" readonly="1" optional="hide" sum="Tổng thực tế"/>
+                <field name="variance" readonly="1" optional="hide" sum="Chênh lệch"/>
+                <field name="actual_unit_cost" optional="hide"/>
+
                 <field name="cost_type"/>
-                <field name="notes"/>
+                <field name="notes" optional="hide"/>
                 <field name="currency_id" invisible="1"/>
             </tree>
         </field>
@@ -41,12 +69,38 @@
                             <field name="qty"/>
                             <field name="uom_id" groups="uom.group_uom"/>
                             <field name="sequence"/>
+                            <field name="has_purchase_order" readonly="1"/>
                         </group>
                     </group>
 
-                    <group string="Chi phí">
-                        <group string="Dự kiến (từ PAKD)">
+                    <group string="Giá mua (Purchase)">
+                        <group string="Từ PAKD">
                             <field name="planned_unit_cost" readonly="1"/>
+                        </group>
+                        <group string="Thực tế">
+                            <field name="purchase_unit_price"
+                                   readonly="1"
+                                   attrs="{'invisible': [('has_purchase_order', '=', False)]}"/>
+                            <field name="purchase_unit_price_manual"
+                                   attrs="{'readonly': [('has_purchase_order', '=', True)]}"/>
+                        </group>
+                    </group>
+
+                    <group string="Giá bán &amp; Lợi nhuận">
+                        <group string="Doanh thu">
+                            <field name="sale_unit_price"/>
+                            <field name="total_sale" readonly="1"/>
+                        </group>
+                        <group string="Chi phí &amp; Lợi nhuận">
+                            <field name="total_purchase" readonly="1"/>
+                            <field name="profit" readonly="1"/>
+                            <field name="margin_percent" readonly="1" widget="percentage"/>
+                        </group>
+                    </group>
+
+                    <!-- Legacy fields -->
+                    <group string="Legacy (backward compatibility)" groups="base.group_no_one">
+                        <group string="Dự kiến (từ PAKD)">
                             <field name="planned_total" readonly="1"/>
                         </group>
                         <group string="Thực tế">

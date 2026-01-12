@@ -49,3 +49,39 @@ body .o_form_view.o_xxl_form_view {
     overflow-x: auto !important;
     overflow-y: auto !important;
 }
+
+/* Contract Cost - Purchase price from PO (blue background) */
+.o_list_table .o_data_row .o_data_cell[name="purchase_unit_price"] {
+    background-color: #e3f2fd !important; /* Light blue */
+    font-weight: 500;
+}
+
+.o_list_table .o_data_row .o_data_cell[name="purchase_unit_price"] input,
+.o_list_table .o_data_row .o_data_cell[name="purchase_unit_price"] .o_field_widget {
+    background-color: #e3f2fd !important;
+}
+
+/* Contract Cost - Profit positive (green) */
+.o_list_table .o_data_row .o_data_cell[name="profit"] {
+    font-weight: 600;
+}
+
+/* Contract Cost - Margin display */
+.o_list_table .o_data_row .o_data_cell[name="margin_percent"] {
+    font-weight: 500;
+}
+
+/* Green row for profitable items */
+.o_list_table .o_data_row.text-success {
+    background-color: #f0fdf4 !important;
+}
+
+/* Orange/warning row for loss items */
+.o_list_table .o_data_row.text-warning {
+    background-color: #fffbeb !important;
+}
+
+/* Red row for additional costs */
+.o_list_table .o_data_row.text-danger {
+    background-color: #fef2f2 !important;
+}

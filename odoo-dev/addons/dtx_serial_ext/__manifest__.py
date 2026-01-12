@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Serial Extension',
-    'version': '16.0.2.3.0',
+    'version': '16.0.2.4.0',
     'category': 'Inventory/Inventory',
     'summary': 'Extended serial/lot tracking for DTX device lifecycle management',
     'description': """
@@ -17,6 +17,12 @@ Extends stock.lot (serial/lot numbers) with:
 - Manual replacement invoice linking for special cases
 - Warranty period tracking
 - Google Drive link for device documentation
+
+Version 2.4.0:
+- **FIX**: Consumed components now inherit lifecycle state from finished product
+- When serial is consumed in manufacturing (no quants), check finished product state
+- Components in delivered kiosk now correctly show 'delivered' status
+- Supports recursive state inheritance for multi-level BOM
 
 Version 2.3.0:
 - **NEW**: Auto-computed lifecycle state based on current location

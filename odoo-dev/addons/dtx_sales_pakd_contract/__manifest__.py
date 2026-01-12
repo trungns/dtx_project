@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Sales PAKD Contract',
-    'version': '16.0.1.4.0',
+    'version': '16.0.1.5.0',
     'category': 'Sales',
     'summary': 'Phương Án Kinh Doanh (PAKD) và quản lý hợp đồng cho Sales Order',
     'description': """
@@ -24,6 +24,15 @@ Tính năng chính:
 - UI gọn nhẹ, ẩn field không dùng cho DTX
 - Upload file scan hợp đồng (PDF/JPG)
 - Tương thích data cũ, không phá workflow core
+
+Version 1.5.0:
+- **FEATURE**: Contract Cost detailed profit analysis per line
+- **NEW**: Auto-populate purchase price from Purchase Orders (readonly, blue background)
+- **NEW**: Auto-populate sale price from Sale Orders (editable)
+- **NEW**: Manual price entry for lines without PO (license, misc costs)
+- **NEW**: Profit and margin calculation per line
+- **NEW**: Color coding - green for profit, red for loss
+- **IMPROVE**: Professional management view with full cost visibility
 
 Version 1.4.0:
 - **FIX**: Allow CEO and GDKD to edit approved PAKD (remove view readonly attrs)

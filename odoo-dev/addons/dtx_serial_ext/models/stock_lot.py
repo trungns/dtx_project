@@ -180,6 +180,7 @@ class StockLot(models.Model):
 
         Logic:
         - Get quants for this serial with qty > 0
+        - If no quants (consumed in production), inherit state from finished product
         - Check location type and usage to determine state:
           - Internal (WH/Stock/*) → 'in_stock'
           - Subcontracting location → 'subcontracted'
@@ -196,7 +197,33 @@ class StockLot(models.Model):
             ])
 
             if not quants:
-                # No stock, assume delivered or scrapped
+                # No stock - check if consumed in production
+                # Find stock move lines where this serial was used
+                consumed_move_lines = self.env['stock.move.line'].search([
+                    ('lot_id', '=', lot.id),
+                    ('state', '=', 'done'),
+                ])
+
+                # Filter for moves that were consumed in production (raw materials)
+                consumed_moves = consumed_move_lines.mapped('move_id').filtered(
+                    lambda m: m.raw_material_production_id
+                )
+
+                if consumed_moves:
+                    # Get the production order where this serial was consumed
+                    production = consumed_moves[0].raw_material_production_id
+                    finished_lot = production.lot_producing_id
+
+                    if finished_lot:
+                        # Recursively compute state of finished product
+                        # This handles multi-level BOM scenarios
+                        finished_lot._compute_x_lifecycle_state()
+
+                        # Inherit the finished product's state
+                        lot.x_lifecycle_state = finished_lot.x_lifecycle_state
+                        continue
+
+                # If not consumed or no finished product, default to in_stock
                 lot.x_lifecycle_state = 'in_stock'
                 continue
 
