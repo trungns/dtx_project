@@ -95,11 +95,36 @@ Each fix documentation includes:
 - **Test Cases**: How to verify the fix
 - **Technical Details**: Code changes and logic
 
+---
+
+#### Issue #3: Component Sale Order Linking (v2.4.2)
+**Module:** `dtx_serial_ext` v2.4.1 → v2.4.2
+
+**Problem:**
+- Components consumed in manufacturing had no link to Sale Orders
+- Couldn't see which SO the components were sold in
+- Logic existed but never triggered
+
+**Solution:**
+- Enhanced hook to recompute sale_order_ids when stock moves done
+- Updated scheduled action to recompute sale orders daily
+- Components now auto-link to finished product's Sale Orders
+- Also updates customer invoices and invoice state
+
+**Result:**
+- MiniPC12 → S00160 ✅
+- touchscreen11 → S00160 ✅
+- 11 components successfully linked ✅
+
+**Files:** [FIX_2026-01-12_COMPONENT_SALE_ORDERS.md](FIX_2026-01-12_COMPONENT_SALE_ORDERS.md)
+
+---
+
 ## Module Versions
 
 | Module | Current Version | Last Updated |
 |--------|----------------|--------------|
-| dtx_serial_ext | 2.4.1 | 2026-01-12 |
+| dtx_serial_ext | 2.4.2 | 2026-01-12 |
 | dtx_sales_pakd_contract | 1.5.0 | 2026-01-12 |
 | dtx_sale_excel_quote | 1.1.0 | 2026-01-10 |
 
