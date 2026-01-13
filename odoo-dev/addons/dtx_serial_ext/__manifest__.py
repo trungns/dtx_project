@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Serial Extension',
-    'version': '16.0.2.4.1',
+    'version': '16.0.2.4.2',
     'category': 'Inventory/Inventory',
     'summary': 'Extended serial/lot tracking for DTX device lifecycle management',
     'description': """
@@ -17,6 +17,13 @@ Extends stock.lot (serial/lot numbers) with:
 - Manual replacement invoice linking for special cases
 - Warranty period tracking
 - Google Drive link for device documentation
+
+Version 2.4.2:
+- **ENHANCEMENT**: Components now auto-link to Sale Orders via finished product
+- Hook automatically updates sale_order_ids when stock moves done
+- Scheduled action recomputes sale orders daily for production serials
+- Components show which SO their finished product was sold in
+- Also updates customer invoices and invoice state for components
 
 Version 2.4.1:
 - **FIX**: Components stuck in production location now inherit finished product state

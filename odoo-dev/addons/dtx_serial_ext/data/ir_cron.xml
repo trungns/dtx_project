@@ -17,6 +17,14 @@ serial_ids = quants.mapped('lot_id')
 if serial_ids:
     # Recompute lifecycle state for all serials in production
     serial_ids._compute_x_lifecycle_state()
+
+    # Recompute sale orders (for components consumed in MO)
+    serial_ids._compute_sale_orders()
+
+    # Recompute customer invoices (depends on sale orders)
+    serial_ids._compute_customer_invoices()
+    serial_ids._compute_customer_invoice_state()
+
     env.cr.commit()
         </field>
         <field name="interval_number">1</field>

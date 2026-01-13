@@ -109,6 +109,23 @@ class StockMoveLine(models.Model):
                     except Exception as e:
                         _logger.error("DTX Serial: Error updating x_lifecycle_state for lot %s: %s",
                                     lot.name, str(e), exc_info=True)
+
+                # Also update sale_order_ids (for components consumed in production)
+                if hasattr(lot, 'sale_order_ids'):
+                    try:
+                        lot._compute_sale_orders()
+                        _logger.info("DTX Serial: Updated sale_order_ids for lot %s (count: %d)",
+                                   lot.name, len(lot.sale_order_ids))
+
+                        # Also update customer invoices (depends on sale orders)
+                        if hasattr(lot, 'customer_invoice_ids'):
+                            lot._compute_customer_invoices()
+                            lot._compute_customer_invoice_state()
+                            _logger.info("DTX Serial: Updated customer invoices for lot %s",
+                                       lot.name)
+                    except Exception as e:
+                        _logger.error("DTX Serial: Error updating sale orders for lot %s: %s",
+                                    lot.name, str(e), exc_info=True)
             except Exception as e:
                 _logger.error("DTX Serial: Error updating lifecycle state for lot %s: %s",
                              lot.name if lot else 'Unknown', str(e), exc_info=True)
