@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Scheduled Action: Recompute Serial Lifecycle States -->
+    <record id="ir_cron_recompute_serial_lifecycle_states" model="ir.cron">
+        <field name="name">Recompute Serial Lifecycle States (Production Location)</field>
+        <field name="model_id" ref="stock.model_stock_lot"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get all serials with quants in production location
+production_locations = env['stock.location'].search([('usage', '=', 'production')])
+quants = env['stock.quant'].search([
+    ('location_id', 'in', production_locations.ids),
+    ('quantity', '>', 0),
+])
+
+serial_ids = quants.mapped('lot_id')
+if serial_ids:
+    # Recompute lifecycle state for all serials in production
+    serial_ids._compute_x_lifecycle_state()
+    env.cr.commit()
+        </field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+        <field name="doall" eval="False"/>
+    </record>
+</odoo>

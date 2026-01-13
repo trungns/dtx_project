@@ -254,7 +254,34 @@ class StockLot(models.Model):
                 lot.x_lifecycle_state = 'scrapped'
 
             elif location.usage == 'production':
-                lot.x_lifecycle_state = 'in_production'
+                # Component in production location - check if consumed in MO with delivered finished product
+                consumed_move_lines = self.env['stock.move.line'].search([
+                    ('lot_id', '=', lot.id),
+                    ('state', '=', 'done'),
+                ])
+
+                # Filter for moves that were consumed in production (raw materials)
+                consumed_moves = consumed_move_lines.mapped('move_id').filtered(
+                    lambda m: m.raw_material_production_id
+                )
+
+                if consumed_moves:
+                    # Get the production order where this serial was consumed
+                    production = consumed_moves[0].raw_material_production_id
+                    finished_lot = production.lot_producing_id
+
+                    if finished_lot:
+                        # Recursively compute state of finished product
+                        finished_lot._compute_x_lifecycle_state()
+
+                        # Inherit the finished product's state
+                        # This handles the case where component is "stuck" in production location
+                        # but the finished product has been delivered
+                        lot.x_lifecycle_state = finished_lot.x_lifecycle_state
+                    else:
+                        lot.x_lifecycle_state = 'in_production'
+                else:
+                    lot.x_lifecycle_state = 'in_production'
 
             else:
                 # Default to in_stock for other cases
