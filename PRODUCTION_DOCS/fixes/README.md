@@ -25,21 +25,28 @@ This folder contains detailed documentation for all fixes and enhancements appli
 
 ---
 
-#### Issue #2: Component Lifecycle State Inheritance
-**Module:** `dtx_serial_ext` v2.4.0
+#### Issue #2: Component Lifecycle State Inheritance (v2.4.1)
+**Module:** `dtx_serial_ext` v2.4.0 → v2.4.1
 
 **Problem:**
 - Components consumed in kiosk manufacturing showed "In Production"
 - Even after kiosk delivered to customer
-- Incorrect lifecycle state tracking
+- Issue persisted even with quants in production location
 
-**Solution:**
+**Solution v2.4.0:**
 - Detect consumed components (no quants)
 - Find manufacturing order where consumed
 - Recursively inherit finished product's state
-- Multi-level BOM support
 
-**Files:** [COMPONENT_STATE_INHERITANCE_FIX.md](COMPONENT_STATE_INHERITANCE_FIX.md)
+**Solution v2.4.1 (Extended Fix):**
+- Handle components WITH quants in production location
+- Check if consumed in MO even when quants exist
+- Added daily scheduled action for old data
+- Existing hook handles new data automatically
+
+**Files:**
+- [COMPONENT_STATE_INHERITANCE_FIX.md](COMPONENT_STATE_INHERITANCE_FIX.md) (v2.4.0)
+- [FIX_2026-01-12_COMPONENT_STATE_V2.md](FIX_2026-01-12_COMPONENT_STATE_V2.md) (v2.4.1)
 
 ---
 
@@ -92,7 +99,7 @@ Each fix documentation includes:
 
 | Module | Current Version | Last Updated |
 |--------|----------------|--------------|
-| dtx_serial_ext | 2.4.0 | 2026-01-12 |
+| dtx_serial_ext | 2.4.1 | 2026-01-12 |
 | dtx_sales_pakd_contract | 1.5.0 | 2026-01-12 |
 | dtx_sale_excel_quote | 1.1.0 | 2026-01-10 |
 
