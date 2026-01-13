@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'DTX Serial Extension',
-    'version': '16.0.2.4.2',
+    'version': '16.0.2.5.0',
     'category': 'Inventory/Inventory',
     'summary': 'Extended serial/lot tracking for DTX device lifecycle management',
     'description': """
@@ -17,6 +17,14 @@ Extends stock.lot (serial/lot numbers) with:
 - Manual replacement invoice linking for special cases
 - Warranty period tracking
 - Google Drive link for device documentation
+
+Version 2.5.0:
+- **NEW**: External invoice number tracking for MISA accounting integration
+- Display vendor invoice numbers from MISA on Device Serials
+- Display customer invoice numbers from MISA on Device Serials
+- Uses Odoo standard 'ref' field on account.move for invoice numbers
+- Visible in both tree view (list) and form view (detail)
+- No custom schema changes - leverages existing Odoo fields
 
 Version 2.4.2:
 - **ENHANCEMENT**: Components now auto-link to Sale Orders via finished product

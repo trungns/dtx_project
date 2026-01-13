@@ -144,6 +144,21 @@ class StockLot(models.Model):
     )
 
     # ==========================================
+    # EXTERNAL INVOICE NUMBERS (MISA)
+    # ==========================================
+    vendor_bill_numbers = fields.Char(
+        compute='_compute_vendor_bill_numbers',
+        string='Vendor Invoice Numbers',
+        help='External invoice numbers from vendor bills (from MISA accounting system)',
+    )
+
+    customer_invoice_numbers = fields.Char(
+        compute='_compute_customer_invoice_numbers',
+        string='Customer Invoice Numbers',
+        help='External invoice numbers for customer invoices (from MISA accounting system)',
+    )
+
+    # ==========================================
     # WARRANTY TRACKING
     # ==========================================
     warranty_start = fields.Date(
@@ -497,6 +512,38 @@ class StockLot(models.Model):
             else:
                 # No sale orders linked
                 lot.customer_invoice_state = 'not_invoiced'
+
+    def _compute_vendor_bill_numbers(self):
+        """
+        Extract external invoice numbers from vendor bills
+        Uses the 'ref' field which stores vendor's actual invoice number
+        """
+        for lot in self:
+            if lot.vendor_bill_ids:
+                # Get posted bills only
+                bills = lot.vendor_bill_ids.filtered(lambda b: b.state == 'posted')
+                # Extract ref field (vendor invoice number)
+                numbers = bills.mapped('ref')
+                # Join with comma, filter out empty values
+                lot.vendor_bill_numbers = ', '.join(filter(None, numbers)) or 'N/A'
+            else:
+                lot.vendor_bill_numbers = 'N/A'
+
+    def _compute_customer_invoice_numbers(self):
+        """
+        Extract external invoice numbers from customer invoices
+        Uses the 'ref' field which stores customer invoice number from MISA
+        """
+        for lot in self:
+            if lot.customer_invoice_ids:
+                # Get posted invoices only
+                invoices = lot.customer_invoice_ids.filtered(lambda i: i.state == 'posted')
+                # Extract ref field (customer invoice number)
+                numbers = invoices.mapped('ref')
+                # Join with comma, filter out empty values
+                lot.customer_invoice_numbers = ', '.join(filter(None, numbers)) or 'N/A'
+            else:
+                lot.customer_invoice_numbers = 'N/A'
 
     # ==========================================
     # SEARCH METHODS

@@ -31,6 +31,8 @@
                        decoration-danger="customer_invoice_state == 'not_invoiced'"
                        decoration-warning="customer_invoice_state == 'invoiced'"
                        decoration-success="customer_invoice_state == 'paid'"/>
+                <field name="vendor_bill_numbers" string="Vendor Invoice #" optional="show"/>
+                <field name="customer_invoice_numbers" string="Customer Invoice #" optional="show"/>
                 <field name="purchase_order_ids" widget="many2many_tags" optional="show"/>
                 <field name="sale_order_ids" widget="many2many_tags" optional="show"/>
                 <field name="customer_id" optional="hide"/>
@@ -90,6 +92,7 @@
                                options="{'color_field': 'state', 'no_create': True}"/>
                         <field name="vendor_bill_ids" widget="many2many_tags"
                                options="{'color_field': 'state', 'no_create': True}"/>
+                        <field name="vendor_bill_numbers" readonly="1" string="Số hoá đơn NCC (MISA)"/>
                         <field name="vendor_invoice_state" widget="badge"
                                decoration-danger="vendor_invoice_state == 'missing'"
                                decoration-success="vendor_invoice_state == 'linked'"
@@ -111,6 +114,7 @@
                                options="{'color_field': 'state', 'no_create': True}"/>
                         <field name="customer_invoice_ids" widget="many2many_tags"
                                options="{'color_field': 'state', 'no_create': True}"/>
+                        <field name="customer_invoice_numbers" readonly="1" string="Số hoá đơn KH (MISA)"/>
                         <field name="customer_invoice_state" widget="badge"
                                decoration-danger="customer_invoice_state == 'not_invoiced'"
                                decoration-warning="customer_invoice_state == 'invoiced'"

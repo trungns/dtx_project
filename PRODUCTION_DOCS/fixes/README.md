@@ -120,11 +120,35 @@ Each fix documentation includes:
 
 ---
 
+#### Issue #4: External Invoice Number Tracking (v2.5.0)
+**Module:** `dtx_serial_ext` v2.4.2 → v2.5.0
+
+**Problem:**
+- Need to track MISA external invoice numbers in Device Serials
+- Company uses MISA for actual invoice generation
+- No way to see external invoice numbers in Odoo
+
+**Solution:**
+- Leverage Odoo's standard `account.move.ref` field
+- Added computed display fields on stock.lot
+- Extract external invoice numbers from vendor bills and customer invoices
+- Display in both tree (list) and form (detail) views
+
+**Result:**
+- Users enter MISA invoice numbers in Accounting module
+- Automatically displayed in Device Serials ✅
+- Complete traceability from operations to accounting ✅
+- No custom schema changes ✅
+
+**Files:** [EXTERNAL_INVOICE_TRACKING.md](EXTERNAL_INVOICE_TRACKING.md)
+
+---
+
 ## Module Versions
 
 | Module | Current Version | Last Updated |
 |--------|----------------|--------------|
-| dtx_serial_ext | 2.4.2 | 2026-01-12 |
+| dtx_serial_ext | 2.5.0 | 2026-01-13 |
 | dtx_sales_pakd_contract | 1.5.0 | 2026-01-12 |
 | dtx_sale_excel_quote | 1.1.0 | 2026-01-10 |
 
