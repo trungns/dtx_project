@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ==========================================
+         SUBSCRIPTION DASHBOARD (v1.7.0)
+         ========================================== -->
+
+    <!-- Tree view: Subscription contracts (SO level) -->
+    <record id="view_subscription_contracts_tree" model="ir.ui.view">
+        <field name="name">sale.order.subscription.tree</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <tree string="Subscription Contracts" create="false">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="date_order"/>
+                <field name="x_subscription_status_summary"/>
+                <field name="x_renewal_of_id"/>
+                <field name="x_renewal_count"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'sale'"
+                       decoration-info="state in ('draft', 'sent')"
+                       decoration-muted="state == 'cancel'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Tree view: Subscription lines (line level with status) -->
+    <record id="view_subscription_lines_tree" model="ir.ui.view">
+        <field name="name">sale.order.line.subscription.tree</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <tree string="Subscription Lines" create="false"
+                  decoration-success="x_subscription_status == 'active'"
+                  decoration-warning="x_subscription_status == 'expiring_soon'"
+                  decoration-danger="x_subscription_status in ('expired', 'suspended', 'cancelled')"
+                  decoration-info="x_subscription_status == 'renewed'"
+                  decoration-muted="x_subscription_status == 'draft'">
+                <field name="order_id"/>
+                <field name="order_partner_id" string="Customer"/>
+                <field name="product_id"/>
+                <field name="x_device_count"/>
+                <field name="x_months"/>
+                <field name="x_subscription_start"/>
+                <field name="x_subscription_end"/>
+                <field name="x_deployment_date"/>
+                <field name="x_effective_deployment_date"/>
+                <field name="x_subscription_status" widget="badge"
+                       decoration-success="x_subscription_status == 'active'"
+                       decoration-warning="x_subscription_status == 'expiring_soon'"
+                       decoration-danger="x_subscription_status in ('expired', 'suspended', 'cancelled')"
+                       decoration-info="x_subscription_status == 'renewed'"
+                       decoration-muted="x_subscription_status == 'draft'"/>
+                <field name="x_days_to_expiry"/>
+                <field name="price_subtotal" sum="Total"/>
+                <field name="salesman_id" widget="many2one_avatar_user"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Search view: Subscription filters -->
+    <record id="view_subscription_search" model="ir.ui.view">
+        <field name="name">sale.order.subscription.search</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search string="Subscription Contracts">
+                <field name="name" string="SO Number"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="user_id" string="Salesperson"/>
+                <field name="order_line" string="Product"
+                       filter_domain="[('order_line.product_id', 'ilike', self)]"/>
+
+                <separator/>
+                <filter name="filter_has_subscriptions"
+                        string="Has Subscriptions"
+                        domain="[('x_has_subscription_lines', '=', True)]"/>
+
+                <separator/>
+                <filter name="filter_confirmed"
+                        string="Confirmed"
+                        domain="[('state', 'in', ['sale', 'done'])]"/>
+                <filter name="filter_draft"
+                        string="Quotations"
+                        domain="[('state', 'in', ['draft', 'sent'])]"/>
+
+                <separator/>
+                <filter name="filter_has_renewals"
+                        string="Has Renewals"
+                        domain="[('x_renewal_count', '>', 0)]"/>
+                <filter name="filter_is_renewal"
+                        string="Is Renewal"
+                        domain="[('x_renewal_of_id', '!=', False)]"/>
+
+                <group expand="0" string="Group By">
+                    <filter name="group_partner" string="Customer"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_salesperson" string="Salesperson"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_date_order" string="Order Date"
+                            context="{'group_by': 'date_order:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Search view: Subscription lines filters -->
+    <record id="view_subscription_lines_search" model="ir.ui.view">
+        <field name="name">sale.order.line.subscription.search</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <search string="Subscription Lines">
+                <field name="order_id" string="SO Number"/>
+                <field name="order_partner_id" string="Customer"/>
+                <field name="product_id" string="Product"/>
+                <field name="salesman_id" string="Salesperson"/>
+
+                <separator/>
+                <filter name="filter_subscription"
+                        string="Subscription Products"
+                        domain="[('x_is_subscription', '=', True)]"/>
+
+                <separator/>
+                <filter name="filter_active"
+                        string="Active"
+                        domain="[('x_subscription_status', '=', 'active')]"/>
+                <filter name="filter_expiring_soon"
+                        string="Expiring Soon"
+                        domain="[('x_subscription_status', '=', 'expiring_soon')]"/>
+                <filter name="filter_expired"
+                        string="Expired"
+                        domain="[('x_subscription_status', '=', 'expired')]"/>
+                <filter name="filter_renewed"
+                        string="Renewed"
+                        domain="[('x_subscription_status', '=', 'renewed')]"/>
+                <filter name="filter_draft"
+                        string="Draft"
+                        domain="[('x_subscription_status', '=', 'draft')]"/>
+                <filter name="filter_suspended_cancelled"
+                        string="Suspended/Cancelled"
+                        domain="[('x_subscription_status', 'in', ['suspended', 'cancelled'])]"/>
+
+                <separator/>
+                <filter name="filter_confirmed_orders"
+                        string="Confirmed Orders"
+                        domain="[('order_id.state', 'in', ['sale', 'done'])]"/>
+
+                <group expand="0" string="Group By">
+                    <filter name="group_status" string="Status"
+                            context="{'group_by': 'x_subscription_status'}"/>
+                    <filter name="group_product" string="Product"
+                            context="{'group_by': 'product_id'}"/>
+                    <filter name="group_customer" string="Customer"
+                            context="{'group_by': 'order_partner_id'}"/>
+                    <filter name="group_salesperson" string="Salesperson"
+                            context="{'group_by': 'salesman_id'}"/>
+                    <filter name="group_start_date" string="Start Date"
+                            context="{'group_by': 'x_subscription_start:month'}"/>
+                    <filter name="group_end_date" string="End Date"
+                            context="{'group_by': 'x_subscription_end:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action: Subscription Contracts (SO level) -->
+    <record id="action_subscription_contracts" model="ir.actions.act_window">
+        <field name="name">Subscription Contracts</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_subscription_contracts_tree"/>
+        <field name="search_view_id" ref="view_subscription_search"/>
+        <field name="domain">[('x_has_subscription_lines', '=', True)]</field>
+        <field name="context">{
+            'search_default_filter_has_subscriptions': 1,
+            'search_default_filter_confirmed': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No subscription contracts found
+            </p>
+            <p>
+                Subscription contracts are Sale Orders that contain subscription products.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action: Subscription Lines -->
+    <record id="action_subscription_lines" model="ir.actions.act_window">
+        <field name="name">Subscription Lines</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_subscription_lines_tree"/>
+        <field name="search_view_id" ref="view_subscription_lines_search"/>
+        <field name="domain">[('x_is_subscription', '=', True)]</field>
+        <field name="context">{
+            'search_default_filter_subscription': 1,
+            'search_default_filter_confirmed_orders': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No subscription lines found
+            </p>
+            <p>
+                Subscription lines are individual subscription products in Sale Orders.
+                Use filters above to view Active, Expiring Soon, or Expired subscriptions.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action: Expiring Soon Subscriptions (quick access) -->
+    <record id="action_expiring_subscriptions" model="ir.actions.act_window">
+        <field name="name">Expiring Soon</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_subscription_lines_tree"/>
+        <field name="search_view_id" ref="view_subscription_lines_search"/>
+        <field name="domain">[
+            ('x_is_subscription', '=', True),
+            ('x_subscription_status', '=', 'expiring_soon')
+        ]</field>
+        <field name="context">{
+            'search_default_filter_expiring_soon': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No expiring subscriptions
+            </p>
+            <p>
+                This view shows subscriptions that will expire within 30 days.
+                Contact customers to arrange renewal.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu: Subscriptions (under Sales) -->
+    <menuitem id="menu_subscriptions_root"
+              name="Subscriptions"
+              parent="sale.sale_order_menu"
+              sequence="20"/>
+
+    <menuitem id="menu_subscription_contracts"
+              name="Contracts"
+              parent="menu_subscriptions_root"
+              action="action_subscription_contracts"
+              sequence="10"/>
+
+    <menuitem id="menu_subscription_lines"
+              name="All Subscriptions"
+              parent="menu_subscriptions_root"
+              action="action_subscription_lines"
+              sequence="20"/>
+
+    <menuitem id="menu_expiring_subscriptions"
+              name="Expiring Soon"
+              parent="menu_subscriptions_root"
+              action="action_expiring_subscriptions"
+              sequence="30"/>
+
+</odoo>

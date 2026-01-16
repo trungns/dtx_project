@@ -18,7 +18,20 @@
             <xpath expr="//group[@name='group_general']" position="inside">
                 <group string="DTX - Chuẩn hóa sản phẩm" name="dtx_standards_group">
                     <field name="x_dtx_requires_vendor_bill"/>
+                    <field name="x_part_number" placeholder="e.g., DTX-K32-001"/>
+                    <field name="x_country_of_origin" placeholder="e.g., China, Vietnam, USA"/>
                     <field name="x_dtx_notes" placeholder="Ghi chú đặc điểm, yêu cầu đặc biệt..."/>
+                </group>
+            </xpath>
+
+            <!-- Add Subscription-specific fields (visible only for subscription type) -->
+            <xpath expr="//group[@name='group_general']" position="inside">
+                <group string="Subscription Settings" name="dtx_subscription_group"
+                       attrs="{'invisible': [('x_dtx_type', '!=', 'subscription')]}">
+                    <field name="x_subscription_base_price"
+                           widget="monetary"
+                           options="{'currency_field': 'currency_id'}"/>
+                    <field name="x_subscription_default_months"/>
                 </group>
             </xpath>
 
@@ -84,6 +97,8 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='detailed_type']" position="after">
                 <field name="x_dtx_type" optional="show"/>
+                <field name="x_part_number" optional="show"/>
+                <field name="x_country_of_origin" optional="show"/>
             </xpath>
         </field>
     </record>
@@ -113,6 +128,8 @@
                         domain="[('x_dtx_type', '=', 'finished_kiosk')]"/>
                 <filter string="Dịch vụ" name="filter_service"
                         domain="[('x_dtx_type', '=', 'service')]"/>
+                <filter string="Subscription / License" name="filter_subscription"
+                        domain="[('x_dtx_type', '=', 'subscription')]"/>
                 <separator/>
                 <filter string="Yêu cầu hóa đơn đầu vào" name="filter_requires_bill"
                         domain="[('x_dtx_requires_vendor_bill', '=', True)]"/>

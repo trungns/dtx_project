@@ -85,3 +85,133 @@ body .o_form_view.o_xxl_form_view {
 .o_list_table .o_data_row.text-danger {
     background-color: #fef2f2 !important;
 }
+
+/* ==========================================
+   SUBSCRIPTION TABLE HEADER FIX (v1.7.0)
+   Fix column headers being covered/overlapped
+   ========================================== */
+
+/* Ensure table header is visible and not covered */
+.o_field_x2many_list .o_list_table thead,
+.o_field_one2many .o_list_table thead,
+table.o_list_table thead {
+    position: relative !important;
+    z-index: 100 !important;
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Force header row to be visible */
+.o_field_x2many_list .o_list_table thead tr,
+.o_field_one2many .o_list_table thead tr,
+table.o_list_table thead tr {
+    position: relative !important;
+    z-index: 99 !important;
+    background-color: #ffffff !important;
+}
+
+/* Column headers should be fully visible with higher specificity */
+.o_field_x2many_list .o_list_table thead th,
+.o_field_one2many .o_list_table thead th,
+table.o_list_table thead th,
+.o_list_table thead th {
+    background-color: #ffffff !important;
+    padding: 12px 8px !important;
+    vertical-align: middle !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    min-height: 50px !important;
+    height: auto !important;
+    position: relative !important;
+    z-index: 98 !important;
+    overflow: visible !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    text-align: center !important;
+}
+
+/* Fix header text visibility - force all child elements to be visible */
+.o_field_x2many_list .o_list_table thead th .o_column_title,
+.o_field_one2many .o_list_table thead th .o_column_title,
+table.o_list_table thead th .o_column_title,
+.o_list_table thead th .o_column_title {
+    display: inline-block !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    position: relative !important;
+    z-index: 97 !important;
+    line-height: 1.4 !important;
+    padding: 3px 0 !important;
+    vertical-align: middle !important;
+    width: 100% !important;
+    text-align: center !important;
+}
+
+/* Remove any overlay elements that might be covering the header */
+.o_field_x2many_list .o_list_table thead::before,
+.o_field_x2many_list .o_list_table thead::after,
+.o_field_one2many .o_list_table thead::before,
+.o_field_one2many .o_list_table thead::after,
+table.o_list_table thead::before,
+table.o_list_table thead::after {
+    display: none !important;
+}
+
+/* Ensure no absolute positioned elements cover the header */
+.o_field_x2many_list .o_list_table thead th *,
+.o_field_one2many .o_list_table thead th *,
+table.o_list_table thead th * {
+    position: relative !important;
+    z-index: auto !important;
+}
+
+/* Subscription status badge in table */
+.o_field_badge {
+    display: inline-block !important;
+    padding: 2px 8px !important;
+    border-radius: 3px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
+
+/* Better column width for subscription fields */
+.o_list_table td[name="x_subscription_status"],
+.o_list_table th[data-name="x_subscription_status"] {
+    min-width: 100px !important;
+}
+
+.o_list_table td[name="x_days_to_expiry"],
+.o_list_table th[data-name="x_days_to_expiry"] {
+    min-width: 80px !important;
+    text-align: center !important;
+}
+
+.o_list_table td[name="x_deployment_date"],
+.o_list_table th[data-name="x_deployment_date"] {
+    min-width: 100px !important;
+}
+
+/* CRITICAL FIX: Remove sticky positioning that might cause overlap */
+.o_content .o_list_view .o_list_table thead {
+    position: relative !important;
+}
+
+/* Force table wrapper to not clip header */
+.o_field_x2many_list,
+.o_field_one2many {
+    overflow: visible !important;
+}
+
+.o_field_x2many_list .o_list_renderer,
+.o_field_one2many .o_list_renderer {
+    overflow: visible !important;
+}
+
+/* Ensure table container doesn't hide header */
+.o_field_x2many_list .table-responsive,
+.o_field_one2many .table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}

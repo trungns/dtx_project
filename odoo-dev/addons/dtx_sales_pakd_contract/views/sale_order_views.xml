@@ -26,6 +26,15 @@
                         attrs="{'invisible': [('x_contract_scan_count', '=', 0)]}">
                     <field name="x_contract_scan_count" widget="statinfo" string="File HĐ"/>
                 </button>
+
+                <!-- Renewals smart button (v1.7.0) -->
+                <button name="action_view_renewals"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-refresh"
+                        attrs="{'invisible': ['|', ('x_renewal_count', '=', 0), ('x_has_subscription_lines', '=', False)]}">
+                    <field name="x_renewal_count" widget="statinfo" string="Renewals"/>
+                </button>
             </xpath>
 
             <!-- Add DTX Business group after partner_id -->
@@ -39,6 +48,15 @@
 
             <!-- Add Advance Payment and AR tracking fields after payment_term_id -->
             <xpath expr="//field[@name='payment_term_id']" position="after">
+                <!-- Subscription Status Summary (v1.7.0) -->
+                <field name="x_has_subscription_lines" invisible="1"/>
+                <field name="x_subscription_status_summary"
+                       attrs="{'invisible': [('x_has_subscription_lines', '=', False)]}"
+                       readonly="1"/>
+                <field name="x_renewal_of_id"
+                       attrs="{'invisible': [('x_renewal_of_id', '=', False)]}"
+                       readonly="1"/>
+
                 <!-- Advance Payment Section -->
                 <field name="x_advance_amount"
                        widget="monetary"
@@ -186,6 +204,98 @@
                 <attribute name="groups">!dtx_sales_pakd_contract.group_dtx_ui_simplified</attribute>
             </xpath>
 
+        </field>
+    </record>
+
+    <!-- ==========================================
+         SUBSCRIPTION FEATURES
+         ========================================== -->
+
+    <!-- Add Renew Contract button to SO header -->
+    <record id="view_order_form_renew_button" model="ir.ui.view">
+        <field name="name">sale.order.form.renew.button</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <!-- Add button next to Create Invoice button -->
+            <xpath expr="//button[@name='action_confirm']" position="after">
+                <button name="%(action_renew_subscription_wizard)d"
+                        string="Renew Contract"
+                        type="action"
+                        class="btn-primary"
+                        attrs="{'invisible': ['|', ('state', '!=', 'sale'), ('x_has_subscription_lines', '=', False)]}"/>
+                <button name="action_suspend_subscriptions"
+                        string="Suspend Subscriptions"
+                        type="object"
+                        class="btn-warning"
+                        attrs="{'invisible': ['|', ('state', '!=', 'sale'), ('x_has_subscription_lines', '=', False)]}"/>
+                <button name="action_cancel_subscriptions"
+                        string="Cancel Subscriptions"
+                        type="object"
+                        class="btn-danger"
+                        attrs="{'invisible': ['|', ('state', '!=', 'sale'), ('x_has_subscription_lines', '=', False)]}"/>
+                <button name="action_reactivate_subscriptions"
+                        string="Reactivate Subscriptions"
+                        type="object"
+                        class="btn-success"
+                        attrs="{'invisible': ['|', ('state', '!=', 'sale'), ('x_has_subscription_lines', '=', False)]}"/>
+                <field name="x_has_subscription_lines" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Wizard action for Renew Subscription -->
+    <record id="action_renew_subscription_wizard" model="ir.actions.act_window">
+        <field name="name">Renew Subscription</field>
+        <field name="res_model">dtx.renew.subscription.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_order_id': active_id}</field>
+    </record>
+
+    <!-- Extend Sale Order form to add subscription fields in order lines -->
+    <record id="view_order_form_subscription_fields" model="ir.ui.view">
+        <field name="name">sale.order.form.subscription.fields</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <!-- Add fields to order line tree view inside SO form -->
+            <xpath expr="//field[@name='order_line']/tree/field[@name='product_id']" position="after">
+                <field name="x_part_number" optional="show" readonly="1"/>
+                <field name="x_country_of_origin" optional="show" readonly="1"/>
+            </xpath>
+
+            <xpath expr="//field[@name='order_line']/tree/field[@name='product_uom_qty']" position="after">
+                <field name="x_is_subscription" invisible="1"/>
+                <!-- Subscription Basic Fields -->
+                <field name="x_device_count"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)], 'readonly': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
+                <field name="x_months"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)], 'readonly': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
+                <field name="x_subscription_start"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)], 'readonly': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
+                <field name="x_subscription_end"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)], 'readonly': [('state', 'in', ['sale', 'done', 'cancel'])]}"/>
+                <!-- Subscription Lifecycle (v1.7.0) -->
+                <field name="x_deployment_date"
+                       string="Deploy Date"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)]}"/>
+                <field name="x_subscription_status"
+                       string="Status"
+                       widget="badge"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)]}"
+                       decoration-success="x_subscription_status == 'active'"
+                       decoration-warning="x_subscription_status == 'expiring_soon'"
+                       decoration-danger="x_subscription_status in ('expired', 'suspended', 'cancelled')"
+                       decoration-info="x_subscription_status == 'renewed'"
+                       readonly="1"/>
+                <field name="x_days_to_expiry"
+                       string="Days Left"
+                       attrs="{'invisible': [('x_is_subscription', '=', False)]}"
+                       readonly="1"/>
+            </xpath>
         </field>
     </record>
 

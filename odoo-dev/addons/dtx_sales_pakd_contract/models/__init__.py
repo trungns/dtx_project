@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from . import sale_order
+from . import sale_order_line
 from . import sale_order_stock
 from . import account_move
 from . import dtx_pakd

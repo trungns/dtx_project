@@ -97,6 +97,48 @@ class SaleOrder(models.Model):
     )
 
     # ==========================================
+    # SUBSCRIPTION FIELDS
+    # ==========================================
+    x_has_subscription_lines = fields.Boolean(
+        string='Has Subscription Lines',
+        compute='_compute_has_subscription_lines',
+        store=True,
+        help='Check if this SO has any subscription product lines',
+    )
+
+    # ==========================================
+    # SUBSCRIPTION RENEWAL CHAIN (v1.7.0)
+    # ==========================================
+    x_renewal_of_id = fields.Many2one(
+        'sale.order',
+        string='Renews Contract',
+        help='Reference to the original Sale Order that this renewal replaces',
+        tracking=True,
+        copy=False,
+        index=True,
+    )
+
+    x_renewed_by_ids = fields.One2many(
+        'sale.order',
+        'x_renewal_of_id',
+        string='Renewed By',
+        help='List of renewal Sale Orders created from this contract',
+    )
+
+    x_renewal_count = fields.Integer(
+        string='Renewal Count',
+        compute='_compute_renewal_count',
+        store=True,
+        help='Number of renewal contracts created',
+    )
+
+    x_subscription_status_summary = fields.Char(
+        string='Subscription Summary',
+        compute='_compute_subscription_status_summary',
+        help='Summary of subscription line statuses (e.g., "2 Active, 1 Expiring Soon")',
+    )
+
+    # ==========================================
     # CONTRACT COMPUTED FIELDS (for list view)
     # ==========================================
     x_revenue_expected = fields.Monetary(
@@ -197,17 +239,63 @@ class SaleOrder(models.Model):
         for order in self:
             order.contract_cost_count = len(order.contract_cost_ids)
 
-    @api.depends('amount_untaxed', 'invoice_ids.payment_state', 'invoice_ids.amount_untaxed', 'invoice_ids.date',
-                 'contract_cost_ids.total_purchase', 'contract_cost_ids.total_sale')
+    @api.depends('order_line.x_is_subscription')
+    def _compute_has_subscription_lines(self):
+        """Check if SO has any subscription product lines"""
+        for order in self:
+            order.x_has_subscription_lines = any(order.order_line.mapped('x_is_subscription'))
+
+    @api.depends('x_renewed_by_ids')
+    def _compute_renewal_count(self):
+        """Count number of renewal contracts"""
+        for order in self:
+            order.x_renewal_count = len(order.x_renewed_by_ids)
+
+    @api.depends('order_line.x_subscription_status', 'order_line.x_is_subscription')
+    def _compute_subscription_status_summary(self):
+        """Generate summary of subscription line statuses"""
+        for order in self:
+            subscription_lines = order.order_line.filtered('x_is_subscription')
+            if not subscription_lines:
+                order.x_subscription_status_summary = False
+                continue
+
+            # Count by status
+            status_counts = {}
+            for line in subscription_lines:
+                status = line.x_subscription_status
+                if status:
+                    status_label = dict(line._fields['x_subscription_status'].selection).get(status, status)
+                    status_counts[status_label] = status_counts.get(status_label, 0) + 1
+
+            # Build summary string
+            summary_parts = [f"{count} {status}" for status, count in status_counts.items()]
+            order.x_subscription_status_summary = ', '.join(summary_parts) if summary_parts else 'No status'
+
+    @api.depends('amount_untaxed',
+                 'invoice_ids', 'invoice_ids.payment_state', 'invoice_ids.amount_untaxed',
+                 'invoice_ids.state', 'invoice_ids.date',
+                 'contract_cost_ids.total_purchase')
     def _compute_contract_financials(self):
         """Compute contract financial fields"""
         for order in self:
             # Revenue expected = SO amount_untaxed
             order.x_revenue_expected = order.amount_untaxed
 
-            # Revenue actual = sum of total_sale from contract costs (actual revenue per line)
-            # This reflects actual sale prices which may differ from SO
-            order.x_revenue_actual = sum(order.contract_cost_ids.mapped('total_sale'))
+            # Revenue actual = sum of PAID customer invoices (registered payment)
+            # Only count invoices that have been fully paid (payment_state == 'paid')
+            # Contract Costs is for purchase costs (chi phí) only, NOT revenue
+            paid_invoices = order.invoice_ids.filtered(
+                lambda inv: inv.move_type == 'out_invoice' and
+                            inv.state == 'posted' and
+                            inv.payment_state == 'paid'
+            )
+            if paid_invoices:
+                # Use amount_untaxed for revenue (before tax)
+                order.x_revenue_actual = sum(paid_invoices.mapped('amount_untaxed'))
+            else:
+                # If no paid invoices yet, revenue actual = 0
+                order.x_revenue_actual = 0.0
 
             # Payment date = latest payment date from paid invoices
             paid_invoices = order.invoice_ids.filtered(
@@ -602,3 +690,135 @@ class SaleOrder(models.Model):
                 'create': False,
             },
         }
+
+    def action_view_renewals(self):
+        """View renewal contracts (subscription renewals)"""
+        self.ensure_one()
+
+        return {
+            'name': f'Renewals - {self.name}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'sale.order',
+            'view_mode': 'tree,form',
+            'domain': [('x_renewal_of_id', '=', self.id)],
+            'context': {
+                'create': False,
+            },
+        }
+
+    def action_suspend_subscriptions(self):
+        """Set all subscription lines to Suspended status"""
+        self.ensure_one()
+        subscription_lines = self.order_line.filtered('x_is_subscription')
+        if not subscription_lines:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Warning',
+                    'message': 'No subscription lines found',
+                    'type': 'warning',
+                }
+            }
+
+        subscription_lines.write({'x_subscription_status_manual': 'suspended'})
+        subscription_lines._compute_subscription_status()
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Success',
+                'message': f'Suspended {len(subscription_lines)} subscription(s)',
+                'type': 'success',
+            }
+        }
+
+    def action_cancel_subscriptions(self):
+        """Set all subscription lines to Cancelled status"""
+        self.ensure_one()
+        subscription_lines = self.order_line.filtered('x_is_subscription')
+        if not subscription_lines:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Warning',
+                    'message': 'No subscription lines found',
+                    'type': 'warning',
+                }
+            }
+
+        subscription_lines.write({'x_subscription_status_manual': 'cancelled'})
+        subscription_lines._compute_subscription_status()
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Success',
+                'message': f'Cancelled {len(subscription_lines)} subscription(s)',
+                'type': 'success',
+            }
+        }
+
+    def action_reactivate_subscriptions(self):
+        """Clear manual status override to restore auto-computed status"""
+        self.ensure_one()
+        subscription_lines = self.order_line.filtered('x_is_subscription')
+        if not subscription_lines:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Warning',
+                    'message': 'No subscription lines found',
+                    'type': 'warning',
+                }
+            }
+
+        subscription_lines.write({'x_subscription_status_manual': False})
+        subscription_lines._compute_subscription_status()
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Success',
+                'message': f'Reactivated {len(subscription_lines)} subscription(s)',
+                'type': 'success',
+            }
+        }
+
+    # ==========================================
+    # OVERRIDE WRITE/CREATE TO SANITIZE DATA
+    # ==========================================
+    def _sanitize_text_fields(self, vals):
+        """
+        Remove NUL (0x00) characters from text fields to prevent database errors.
+        This commonly happens when copy-pasting from Excel or other sources.
+        """
+        # List of text fields that need sanitization
+        text_fields = ['x_contract_no', 'note', 'client_order_ref']
+
+        for field in text_fields:
+            if field in vals and vals[field] and isinstance(vals[field], str):
+                # Remove NUL characters
+                vals[field] = vals[field].replace('\x00', '')
+                # Also remove other problematic control characters
+                vals[field] = ''.join(char for char in vals[field] if ord(char) >= 32 or char in '\n\r\t')
+
+        return vals
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to sanitize text fields"""
+        sanitized_vals_list = []
+        for vals in vals_list:
+            sanitized_vals_list.append(self._sanitize_text_fields(vals))
+        return super(SaleOrder, self).create(sanitized_vals_list)
+
+    def write(self, vals):
+        """Override write to sanitize text fields"""
+        vals = self._sanitize_text_fields(vals)
+        return super(SaleOrder, self).write(vals)

@@ -15,6 +15,7 @@ class ProductTemplate(models.Model):
             ('component_untracked', 'Linh kiện / vật tư tiêu hao (không quản lý Serial)'),
             ('finished_kiosk', 'Kiosk / Thiết bị hoàn chỉnh'),
             ('service', 'Dịch vụ (không quản lý kho)'),
+            ('subscription', 'Subscription / License theo tháng'),
         ],
         string='Loại sản phẩm DTX',
         help='Phân loại sản phẩm theo chuẩn DTX để dễ quản lý và giảm sai sót',
@@ -31,6 +32,37 @@ class ProductTemplate(models.Model):
     x_dtx_notes = fields.Text(
         string='Ghi chú nghiệp vụ DTX',
         help='Ghi chú về cách sử dụng, đặc điểm, yêu cầu đặc biệt của sản phẩm này',
+    )
+
+    # ==========================================
+    # SECTION A2: COMMON PRODUCT METADATA (ALL PRODUCTS)
+    # ==========================================
+
+    x_part_number = fields.Char(
+        string='Part Number / Mã sản phẩm',
+        help='Mã sản phẩm theo nhà cung cấp hoặc mã nội bộ DTX',
+        tracking=True,
+    )
+
+    x_country_of_origin = fields.Char(
+        string='Country of Origin / Xuất xứ',
+        help='Nước sản xuất (China, USA, Vietnam, etc.)',
+        tracking=True,
+    )
+
+    # ==========================================
+    # SECTION A3: SUBSCRIPTION-SPECIFIC METADATA
+    # ==========================================
+
+    x_subscription_base_price = fields.Float(
+        string='Base Price / Device / Month',
+        help='Giá cơ bản cho 1 thiết bị trong 1 tháng (VNĐ). Chỉ áp dụng cho subscription products.',
+    )
+
+    x_subscription_default_months = fields.Integer(
+        string='Default Duration (Months)',
+        default=12,
+        help='Số tháng mặc định khi tạo quotation. Chỉ áp dụng cho subscription products.',
     )
 
     # ==========================================
@@ -118,5 +150,7 @@ Ví dụ: cáp mạng, vít, dây điện, đầu RJ45.""",
             'finished_kiosk': """Sản phẩm hoàn chỉnh được lắp ráp từ nhiều linh kiện.
 Có thể sản xuất nội bộ hoặc thuê đối tác lắp ráp.""",
             'service': """Phí triển khai, vận chuyển, cài đặt, bảo trì… không nhập xuất kho.""",
+            'subscription': """License/subscription theo tháng (DiHub, SeQMS Online, etc.).
+Tính phí theo số thiết bị × số tháng. Không nhập xuất kho.""",
         }
         return help_texts.get(self.x_dtx_type, '')
