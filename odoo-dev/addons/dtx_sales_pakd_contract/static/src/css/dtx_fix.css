@@ -1,0 +1,26 @@
+/* ============================================================
+   DTX Sales PAKD - Layout Fixes
+   Fix: many2one autocomplete dropdown bị đè bởi tab container
+   hoặc các element khác khi form có nhiều tab custom
+   ============================================================ */
+
+/* Đảm bảo autocomplete dropdown luôn hiện trên cùng */
+.o-autocomplete--dropdown-menu {
+    z-index: 9999 !important;
+}
+
+/* Fix: tab-content không clip dropdown khi mở autocomplete */
+.o_notebook .tab-content,
+.o_notebook .tab-pane {
+    overflow: visible !important;
+}
+
+/* Fix: form sheet không clip dropdown */
+.o_form_sheet {
+    overflow: visible !important;
+}
+
+/* Fix: editable list container không clip dropdown */
+.o_field_one2many .o_list_renderer {
+    overflow: visible !important;
+}

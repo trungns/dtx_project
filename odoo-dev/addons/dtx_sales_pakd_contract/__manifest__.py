@@ -124,6 +124,11 @@ Version 1.0.0:
         'product',
         'dtx_product_standards',  # Required for subscription product type
     ],
+    'assets': {
+        'web.assets_backend': [
+            'dtx_sales_pakd_contract/static/src/css/dtx_fix.css',
+        ],
+    },
     'data': [
         'security/security_groups.xml',
         'security/ir.model.access.csv',
