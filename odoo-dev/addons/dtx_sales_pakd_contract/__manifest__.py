@@ -126,6 +126,7 @@ Version 1.0.0:
     ],
     'assets': {
         'web.assets_backend': [
+            'dtx_sales_pakd_contract/static/src/css/pakd_view.css',
             'dtx_sales_pakd_contract/static/src/css/dtx_fix.css',
         ],
     },
@@ -146,11 +147,6 @@ Version 1.0.0:
         'views/subscription_dashboard_views.xml',
         'views/dtx_ar_aging_views.xml',
     ],
-    'assets': {
-        'web.assets_backend': [
-            'dtx_sales_pakd_contract/static/src/css/pakd_view.css',
-        ],
-    },
     'installable': True,
     'auto_install': False,
     'application': False,
